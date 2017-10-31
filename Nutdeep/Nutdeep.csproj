@@ -50,6 +50,7 @@
     <Compile Include="Tools\Flags\ThreadAccess.cs" />
     <Compile Include="Tools\MemoryDumper.cs" />
     <Compile Include="Tools\MemoryEditor.cs" />
+    <Compile Include="Tools\MemoryHelper.cs" />
     <Compile Include="Tools\MemoryScanner.cs" />
     <Compile Include="Tools\Pinvoke.cs" />
     <Compile Include="Tools\ScanSettings.cs" />

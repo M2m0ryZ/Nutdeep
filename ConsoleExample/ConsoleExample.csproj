@@ -49,5 +49,11 @@
     <None Include="App.config" />
     <None Include="app.manifest" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Nutdeep\Nutdeep.csproj">
+      <Project>{B1C67A23-5CAF-4A56-8473-F945A674970C}</Project>
+      <Name>Nutdeep</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -10,7 +10,7 @@ using Nutdeep.Tools.Flags;
  */
 namespace Nutdeep.Tools
 {
-    public class MemoryEditor
+    public class MemoryEditor : MemoryHelper
     {
         private IntPtr _handle { get; set; }
         private ProcessAccess _access { get; set; }
@@ -37,70 +37,13 @@ namespace Nutdeep.Tools
 
         public void Write<T>(IntPtr address, T obj)
         {
-            var type = typeof(T);
-            switch (Type.GetTypeCode(type))
+            try
             {
-                case TypeCode.Boolean:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                         (bool)(object)obj));
-                    break;
-                case TypeCode.Char:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (char)(object)obj));
-                    break;
-                case TypeCode.SByte:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (sbyte)(object)obj));
-                    break;
-                case TypeCode.Byte:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (byte)(object)obj));
-                    break;
-                case TypeCode.Int16:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (short)(object)obj));
-                    break;
-                case TypeCode.UInt16:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (ushort)(object)obj));
-                    break;
-                case TypeCode.Int32:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (int)(object)obj));
-                    break;
-                case TypeCode.UInt32:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (uint)(object)obj));
-                    break;
-                case TypeCode.Int64:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (long)(object)obj));
-                    break;
-                case TypeCode.UInt64:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (ulong)(object)obj));
-                    break;
-                case TypeCode.Single:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (float)(object)obj));
-                    break;
-                case TypeCode.Double:
-                    ReplaceByteArray(address, BitConverter.GetBytes(
-                        (double)(object)obj));
-                    break;
-                case TypeCode.Decimal:
-                    ReplaceByteArray(address, decimal.GetBits((decimal)(object)obj)
-                        .SelectMany(x => BitConverter.GetBytes(x)).ToArray());
-                    break;
-                case TypeCode.String:
-                    ReplaceByteArray(address, Encoding.UTF8.GetBytes(
-                        (string)(object)obj));
-                    break;
-                default:
-                    if (type == typeof(byte[]))
-                        ReplaceByteArray(address, (byte[])(object)obj);
-                    else throw new TypeNotSupportedException(type);
-                    break;
+                ReplaceByteArray(address,Parse(obj));
+            }
+            catch (Exception)
+            {
+                throw new NotImplementedException();
             }
         }
 

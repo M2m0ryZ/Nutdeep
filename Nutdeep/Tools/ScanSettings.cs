@@ -7,19 +7,19 @@
         /// False: Do not scan writable memory
         /// Null: Do not care if it's writable memory or not
         /// </summary>
-        public bool? Writable { get; set; } = true;
+        public bool? Writable { get; set; } = true; //dude shit a nullable boolean?!
         /// <summary>
         /// True: Only scan executable memory
         /// False: Do not scan executable memory
         /// Null: Do not care if it's executable memory or not
         /// </summary>
-        public bool? Executable { get; set; } = null;
+        public bool? Executable { get; set; } = null; //you aren't sure wether something is true or false?
         /// <summary>
         /// True: Only scan copy-on-write memory
         /// False: Do not scan copy-on-write memory
         /// Null: Do not care if it's copy-on-write memory or not
         /// </summary>
-        public bool? CopyOnWrite { get; set; } = null;
+        public bool? CopyOnWrite { get; set; } = null; //you aren't sure hue
 
         /// <summary>
         /// Memory Region Type

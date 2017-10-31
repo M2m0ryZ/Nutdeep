@@ -9,7 +9,7 @@ using Nutdeep.Utils.Extensions;
  */
 namespace Nutdeep.Tools
 {
-    public class MemoryDumper
+    public class MemoryDumper : MemoryHelper
     {
         private IntPtr _handle { get; set; }
         private ProcessAccess _access { get; set; }
@@ -30,54 +30,13 @@ namespace Nutdeep.Tools
         public T Read<T>(IntPtr address, int byteOrStringLenght = 16)
         {
             var type = typeof(T);
-            switch (Type.GetTypeCode(type))
+            try
             {
-                case TypeCode.Boolean:
-                    var bytesToBoolean = GetByteArray(address, sizeof(bool));
-                    return (T)(object)BitConverter.ToBoolean(bytesToBoolean, 0);
-                case TypeCode.Char:
-                    var bytesToChar = GetByteArray(address, sizeof(char));
-                    return (T)(object)BitConverter.ToChar(bytesToChar, 0);
-                case TypeCode.SByte:
-                    var bytesToSByte = GetByteArray(address, sizeof(sbyte));
-                    return (T)(object)Convert.ToSByte(bytesToSByte);
-                case TypeCode.Byte:
-                    var bytesToByte = GetByteArray(address, sizeof(byte));
-                    return (T)(object)BitConverter.ToBoolean(bytesToByte, 0);
-                case TypeCode.Int16:
-                    var bytesToInt16 = GetByteArray(address, sizeof(short));
-                    return (T)(object)BitConverter.ToInt16(bytesToInt16, 0);
-                case TypeCode.UInt16:
-                    var bytesToUInt16 = GetByteArray(address, sizeof(ushort));
-                    return (T)(object)BitConverter.ToUInt16(bytesToUInt16, 0);
-                case TypeCode.Int32:
-                    var bytesToInt32 = GetByteArray(address, sizeof(int));
-                    return (T)(object)BitConverter.ToInt32(bytesToInt32, 0);
-                case TypeCode.UInt32:
-                    var bytesToUInt32 = GetByteArray(address, sizeof(uint));
-                    return (T)(object)BitConverter.ToUInt32(bytesToUInt32, 0);
-                case TypeCode.Int64:
-                    var bytesToInt64 = GetByteArray(address, sizeof(long));
-                    return (T)(object)BitConverter.ToInt64(bytesToInt64, 0);
-                case TypeCode.UInt64:
-                    var bytesToUInt64 = GetByteArray(address, sizeof(ulong));
-                    return (T)(object)BitConverter.ToUInt64(bytesToUInt64, 0);
-                case TypeCode.Single:
-                    var bytesToSingle = GetByteArray(address, sizeof(float));
-                    return (T)(object)BitConverter.ToSingle(bytesToSingle, 0);
-                case TypeCode.Double:
-                    var bytesToDouble = GetByteArray(address, sizeof(double));
-                    return (T)(object)BitConverter.ToDouble(bytesToDouble, 0);
-                case TypeCode.Decimal:
-                    var bytesToDecimal = GetByteArray(address, sizeof(decimal));
-                    return (T)(object)bytesToDecimal.ToDecimal();
-                case TypeCode.String:
-                    var bytesToString = GetByteArray(address, byteOrStringLenght);
-                    return (T)(object)Encoding.ASCII.GetString(bytesToString);
-                default:
-                    if (type == typeof(byte[]))
-                        return (T)(object)GetByteArray(address, byteOrStringLenght);
-                    else throw new TypeNotSupportedException(type);
+                return Parse<T>(GetByteArray(address, byteOrStringLenght));
+            }
+            catch (Exception)
+            {
+                throw new NotImplementedException();
             }
         }
 

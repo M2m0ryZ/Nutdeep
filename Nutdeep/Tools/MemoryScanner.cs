@@ -19,7 +19,7 @@ using Nutdeep.Utils.CustomTypes;
 namespace Nutdeep.Tools
 {
     //TODO: multi-thread scan
-    public class MemoryScanner
+    public class MemoryScanner : MemoryHelper
     {
         public event ScanEndsEventHandler ScanEnds;
 
@@ -340,61 +340,16 @@ namespace Nutdeep.Tools
 
         public IntPtr[] GetAddresses<T>(T obj)
         {
-            var type = typeof(T);
-            switch (Type.GetTypeCode(type))
+            try
             {
-                case TypeCode.Boolean:
-                    return General(BitConverter.GetBytes(
-                         (bool)(object)obj)).ToArray();
-                case TypeCode.Char:
-                    return General(BitConverter.GetBytes(
-                        (char)(object)obj)).ToArray();
-                case TypeCode.SByte:
-                    return General(BitConverter.GetBytes(
-                        (sbyte)(object)obj)).ToArray();
-                case TypeCode.Byte:
-                    return General(BitConverter.GetBytes(
-                        (byte)(object)obj)).ToArray();
-                case TypeCode.Int16:
-                    return General(BitConverter.GetBytes(
-                        (short)(object)obj)).ToArray();
-                case TypeCode.UInt16:
-                    return General(BitConverter.GetBytes(
-                        (ushort)(object)obj)).ToArray();
-                case TypeCode.Int32:
-                    return General(BitConverter.GetBytes(
-                        (int)(object)obj)).ToArray();
-                case TypeCode.UInt32:
-                    return General(BitConverter.GetBytes(
-                        (uint)(object)obj)).ToArray();
-                case TypeCode.Int64:
-                    return General(BitConverter.GetBytes(
-                        (long)(object)obj)).ToArray();
-                case TypeCode.UInt64:
-                    return General(BitConverter.GetBytes(
-                        (ulong)(object)obj)).ToArray();
-                case TypeCode.Single:
-                    return General(BitConverter.GetBytes(
-                        (float)(object)obj)).ToArray();
-                case TypeCode.Double:
-                    return General(BitConverter.GetBytes(
-                        (double)(object)obj)).ToArray();
-                case TypeCode.Decimal:
-                    var bytes = decimal.GetBits(
-                        (decimal)(object)obj).SelectMany(
-                        x => BitConverter.GetBytes(x)).ToArray();
-                    return General(bytes).ToArray();
-                case TypeCode.String:
-                    return General(Encoding.UTF8.GetBytes(
-                        (string)(object)obj)).ToArray();
-                default:
-                    if (type == typeof(byte[]))
-                        return General((byte[])(object)obj).ToArray();
-                    else if (type == typeof(WildCard))
-                        return General((WildCard)(object)obj).ToArray();
-                    else throw new TypeNotSupportedException(type);
+                return General(Parse<T>(obj)).ToArray();
+            }
+            catch (Exception)
+            {
+                throw new NotImplementedException();
             }
         }
+        
         public IntPtr[] GetAddresses(string str, bool caseSensitive = true)
         {
             return General(Encoding.UTF8.GetBytes(str), caseSensitive:
@@ -403,61 +358,16 @@ namespace Nutdeep.Tools
 
         public IntPtr[] NextAddresses<T>(IntPtr[] addresses, T obj)
         {
-            var type = typeof(T);
-            switch (Type.GetTypeCode(type))
+            try
             {
-                case TypeCode.Boolean:
-                    return General(addresses, BitConverter.GetBytes(
-                         (bool)(object)obj)).ToArray();
-                case TypeCode.Char:
-                    return General(addresses, BitConverter.GetBytes(
-                        (char)(object)obj)).ToArray();
-                case TypeCode.SByte:
-                    return General(addresses, BitConverter.GetBytes(
-                        (sbyte)(object)obj)).ToArray();
-                case TypeCode.Byte:
-                    return General(addresses, BitConverter.GetBytes(
-                        (byte)(object)obj)).ToArray();
-                case TypeCode.Int16:
-                    return General(addresses, BitConverter.GetBytes(
-                        (short)(object)obj)).ToArray();
-                case TypeCode.UInt16:
-                    return General(addresses, BitConverter.GetBytes(
-                        (ushort)(object)obj)).ToArray();
-                case TypeCode.Int32:
-                    return General(addresses, BitConverter.GetBytes(
-                        (int)(object)obj)).ToArray();
-                case TypeCode.UInt32:
-                    return General(addresses, BitConverter.GetBytes(
-                        (uint)(object)obj)).ToArray();
-                case TypeCode.Int64:
-                    return General(addresses, BitConverter.GetBytes(
-                        (long)(object)obj)).ToArray();
-                case TypeCode.UInt64:
-                    return General(addresses, BitConverter.GetBytes(
-                        (ulong)(object)obj)).ToArray();
-                case TypeCode.Single:
-                    return General(addresses, BitConverter.GetBytes(
-                        (float)(object)obj)).ToArray();
-                case TypeCode.Double:
-                    return General(addresses, BitConverter.GetBytes(
-                        (double)(object)obj)).ToArray();
-                case TypeCode.Decimal:
-                    var bytes = decimal.GetBits(
-                        (decimal)(object)obj).SelectMany(
-                        x => BitConverter.GetBytes(x)).ToArray();
-                    return General(addresses, bytes).ToArray();
-                case TypeCode.String:
-                    return General(addresses, Encoding.UTF8.GetBytes(
-                        (string)(object)obj)).ToArray();
-                default:
-                    if (type == typeof(byte[]))
-                        return General(addresses, (byte[])(object)obj).ToArray();
-                    else if (type == typeof(WildCard))
-                        return General((WildCard)(object)obj).ToArray();
-                    else throw new TypeNotSupportedException(type);
+                return General(Parse<T>(obj)).ToArray();
+            }
+            catch (Exception)
+            {
+                throw new NotImplementedException();
             }
         }
+        
         public IntPtr[] NextAddresses(IntPtr[] addresses, string str, bool caseSensitive = true)
         {
             return General(addresses, Encoding.UTF8.GetBytes(str), 
