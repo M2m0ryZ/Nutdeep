@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using System.Runtime.InteropServices;
 
 using Nutdeep.Exceptions;
 using Nutdeep.Tools.Flags;
@@ -98,7 +97,5 @@ namespace Nutdeep.Tools
             if (!TryWrite(address, buff))
                 throw new UnwritableMemoryException(address, _access);
         }
-
-        
     }
 }

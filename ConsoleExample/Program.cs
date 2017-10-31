@@ -44,18 +44,6 @@ namespace ConsoleExample
             Console.ReadLine();
         }
 
-        void ScanAllProcess()
-        {
-            foreach (var process in Process.GetProcesses())
-            {
-                using (var access = new ProcessAccess(process.Id))
-                {
-                    _scanner.SetAccess(access);
-                    _scanner.GetAddressesByString("comm");
-                }
-            }
-        }
-
         void ScanNotepad()
         {
             using (var access = new ProcessAccess("notepad"))
@@ -105,22 +93,35 @@ namespace ConsoleExample
                 PrintMemoryView(changed, access);
 
                 //as all the scans were done without problems (like unexpected exit)
-                _processesPaused.Remove(access.Process);
+                if (scanner.Settings.PauseWhileScanning)
+                    _processesPaused.Remove(access.Process);
             }
         }
 
-        private void Scan_Ends(object sender, ScanEndsEventArgs args)
+        void ScanAllProcess()
         {
-            Console.WriteLine(args.ToString());
-            Console.WriteLine("Press enter to show the results...");
-            Console.ReadLine();
+            foreach (var process in Process.GetProcesses())
+            {
+                using (var access = new ProcessAccess(process.Id))
+                {
+                    if (_scanner.Settings.PauseWhileScanning)
+                        _processesPaused.Add(access.Process);
 
-            PrintMemoryView(args.Addresses, args.Access);
+                    _scanner.SetAccess(access);
+                    _scanner.GetAddressesByString("comm");
 
-            Console.WriteLine();
+                    if (_scanner.Settings.PauseWhileScanning)
+                        _processesPaused.Remove(access.Process);
+                }
+            }
         }
 
-        private void PrintMemoryView(IntPtr[] addresses, MemoryDumper dumper)
+        void SetTitle(string inf)
+        {
+            Console.Title = $"Nutdeep - {inf}";
+        }
+
+        void PrintMemoryView(IntPtr[] addresses, MemoryDumper dumper)
         {
             for (int i = 0; i < addresses.Length; i++)
             {
@@ -134,16 +135,22 @@ namespace ConsoleExample
             }
         }
 
-        private void SetTitle(string inf)
-        {
-            Console.Title = $"Nutdeep - {inf}";
-        }
-
         private void On_Close()
         {
             if (_processesPaused.Count > 0)
                 foreach (var process in _processesPaused)
                     process.Resume();
+        }
+
+        private void Scan_Ends(object sender, ScanEndsEventArgs args)
+        {
+            Console.WriteLine(args.ToString());
+            Console.WriteLine("Press enter to show the results...");
+            Console.ReadLine();
+
+            PrintMemoryView(args.Addresses, args.Access);
+
+            Console.WriteLine();
         }
     }
 }
