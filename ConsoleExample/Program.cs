@@ -38,7 +38,7 @@ namespace ConsoleExample
 
         void Run()
         {
-            ScanAllProcess();
+            //ScanAllProcess();
             ScanNotepad();
 
             Console.ReadLine();
@@ -64,14 +64,14 @@ namespace ConsoleExample
 
                 MemoryScanner scanner = access;
                 //scanner.SetSettings(ScanSettings); you got this if you want any special shit
-                //as i dont care about events for this, i'll make this local instance
+                //as i dont care about events for this, i made this local instance
 
                 //if you scan from here, and you enabled 
                 //"PauseWhileScanning" please dont forgot to do this
                 if (scanner.Settings.PauseWhileScanning)
                     _processesPaused.Add(access.Process);
 
-                    SEARCH:
+                SEARCH:
                 Console.Write("Gimme a string to search throw notepad: ");
 
                 var str = Console.ReadLine();
@@ -126,7 +126,7 @@ namespace ConsoleExample
             {
                 var address = addresses[i];
                 Console.Write($"([{i}] - {address.ToString("x8").ToUpper()}) => ");
-                
+
                 foreach (var b in dumper.GetByteArray(address))
                     Console.Write($"{b.ToString("x2").ToUpper()} ");
 

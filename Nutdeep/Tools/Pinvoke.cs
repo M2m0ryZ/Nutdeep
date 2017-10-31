@@ -26,6 +26,6 @@ namespace Nutdeep.Tools
         [DllImport("KERNEL32", SetLastError = true)]
         internal static extern bool WriteProcessMemory(IntPtr process, IntPtr address, byte[] buffer, int size, ref uint written);
         [DllImport("KERNEL32")]
-        internal static extern bool VirtualProtectEx(IntPtr process, IntPtr address, int size, Protection protection, out uint oldProtect);
+        internal static extern bool VirtualProtectEx(IntPtr process, IntPtr address, int size, MemoryProtection protection, out uint oldProtect);
     }
 }

@@ -4,6 +4,7 @@ using System.Text;
 using System.Runtime.InteropServices;
 
 using Nutdeep.Exceptions;
+using Nutdeep.Tools.Flags;
 
 /**
  * MemoryEditor - Written by Jeremi Martini (Aka Adversities)
@@ -33,7 +34,7 @@ namespace Nutdeep.Tools
         {
             uint written = 0;
             return ((Pinvoke.VirtualProtectEx(_handle, address,
-                buff.Length, Protection.PEReadWrite,
+                buff.Length, MemoryProtection.Writable,
                 out uint old)) && Pinvoke.WriteProcessMemory(_handle, address,
                 buff, buff.Length, ref written) && buff.Length == written);
         }
@@ -99,12 +100,5 @@ namespace Nutdeep.Tools
         }
 
         
-    }
-
-    [Flags]
-    public enum Protection
-    {
-        PEReadWrite = 0x40,
-        PReadWrite = 0x04
     }
 }
