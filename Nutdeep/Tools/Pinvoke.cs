@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 
 using Nutdeep.Tools.Flags;
+using Nutdeep.Utils;
 
 namespace Nutdeep.Tools
 {
@@ -25,7 +26,5 @@ namespace Nutdeep.Tools
         internal static extern bool ReadProcessMemory(IntPtr process, IntPtr address, byte[] buffer, uint size, ref uint read);
         [DllImport("KERNEL32", SetLastError = true)]
         internal static extern bool WriteProcessMemory(IntPtr process, IntPtr address, byte[] buffer, int size, ref uint written);
-        [DllImport("KERNEL32")]
-        internal static extern bool VirtualProtectEx(IntPtr process, IntPtr address, int size, MemoryProtection protection, out uint oldProtect);
     }
 }

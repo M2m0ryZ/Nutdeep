@@ -7,7 +7,6 @@ using Nutdeep.Tools.Flags;
 
 /**
  * MemoryEditor - Written by Jeremi Martini (Aka Adversities)
- * Date: 10/30/2017
  */
 namespace Nutdeep.Tools
 {
@@ -32,65 +31,80 @@ namespace Nutdeep.Tools
         bool TryWrite(IntPtr address, byte[] buff)
         {
             uint written = 0;
-            return ((Pinvoke.VirtualProtectEx(_handle, address,
-                buff.Length, MemoryProtection.Writable,
-                out uint old)) && Pinvoke.WriteProcessMemory(_handle, address,
+            return (Pinvoke.WriteProcessMemory(_handle, address,
                 buff, buff.Length, ref written) && buff.Length == written);
         }
 
-        public void ReplaceBoolean(IntPtr address, bool obj)
+        public void Write<T>(IntPtr address, T obj)
         {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
+            var type = typeof(T);
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Boolean:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                         (bool)(object)obj));
+                    break;
+                case TypeCode.Char:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (char)(object)obj));
+                    break;
+                case TypeCode.SByte:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (sbyte)(object)obj));
+                    break;
+                case TypeCode.Byte:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (byte)(object)obj));
+                    break;
+                case TypeCode.Int16:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (short)(object)obj));
+                    break;
+                case TypeCode.UInt16:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (ushort)(object)obj));
+                    break;
+                case TypeCode.Int32:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (int)(object)obj));
+                    break;
+                case TypeCode.UInt32:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (uint)(object)obj));
+                    break;
+                case TypeCode.Int64:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (long)(object)obj));
+                    break;
+                case TypeCode.UInt64:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (ulong)(object)obj));
+                    break;
+                case TypeCode.Single:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (float)(object)obj));
+                    break;
+                case TypeCode.Double:
+                    ReplaceByteArray(address, BitConverter.GetBytes(
+                        (double)(object)obj));
+                    break;
+                case TypeCode.Decimal:
+                    ReplaceByteArray(address, decimal.GetBits((decimal)(object)obj)
+                        .SelectMany(x => BitConverter.GetBytes(x)).ToArray());
+                    break;
+                case TypeCode.String:
+                    ReplaceByteArray(address, Encoding.UTF8.GetBytes(
+                        (string)(object)obj));
+                    break;
+                default:
+                    if (type == typeof(byte[]))
+                        ReplaceByteArray(address, (byte[])(object)obj);
+                    else throw new TypeNotSupportedException(type);
+                    break;
+            }
         }
-        public void ReplaceChar(IntPtr address, char obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceInt16(IntPtr address, short obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceUInt16(IntPtr address, ushort obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceInt32(IntPtr address, int obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceUInt32(IntPtr address, uint obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceInt64(IntPtr address, long obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceUInt64(IntPtr address, ulong obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceSingle(IntPtr address, float obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceDouble(IntPtr address, double obj)
-        {
-            ReplaceByteArray(address, BitConverter.GetBytes(obj));
-        }
-        public void ReplaceDecimal(IntPtr address, decimal replacement)
-        {
-            var bytes = decimal.GetBits(replacement)
-                .SelectMany(x => BitConverter.GetBytes(x))
-                .ToArray();
 
-            ReplaceByteArray(address, bytes);
-        }
-        public void ReplaceString(IntPtr address, string obj)
-        {
-            ReplaceByteArray(address, Encoding.UTF8.GetBytes(obj));
-        }
-        public void ReplaceByteArray(IntPtr address, byte[] buff)
+        private void ReplaceByteArray(IntPtr address, byte[] buff)
         {
             ProcessAccess.CheckAccess();
 

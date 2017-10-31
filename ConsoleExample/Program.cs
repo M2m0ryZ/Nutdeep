@@ -26,7 +26,7 @@ namespace ConsoleExample
                 //please feel free to use any of them
                 Settings = new ScanSettings()
                 {
-                    Writable = true //I'm just showing it, it's like this be default
+                    Writable = false //I'm just showing it, it's like this be default
                 }
             };
 
@@ -51,6 +51,10 @@ namespace ConsoleExample
                 SetTitle(access.ToString());
 
                 MemoryScanner scanner = access;
+                scanner.SetSettings(new ScanSettings()
+                {
+                    Writable = false
+                });
                 //scanner.SetSettings(ScanSettings); you got this if you want any special shit
                 //as i dont care about events for this, i made this local instance
 
@@ -63,7 +67,7 @@ namespace ConsoleExample
                 Console.Write("Gimme a string to search throw notepad: ");
 
                 var str = Console.ReadLine();
-                var addresses = scanner.GetAddressesByString(str);
+                var addresses = scanner.GetAddresses(str);
 
                 if (addresses.Length == 0)
                 {
@@ -81,10 +85,10 @@ namespace ConsoleExample
                 var value = Console.ReadLine();
 
                 MemoryEditor editor = access;
-                editor.ReplaceString(addresses[index], value);
+                editor.Write<string>(addresses[index], value);
 
                 //This is "Next Scan"
-                var changed = scanner.GetAddressesByString(addresses, value);
+                var changed = scanner.GetAddresses(addresses, value);
 
                 Console.WriteLine($"{changed.Length} from the last scan has the new value: {value}");
                 Console.Write("Press enter to show them/it...");
@@ -108,7 +112,7 @@ namespace ConsoleExample
                         _processesPaused.Add(access.Process);
 
                     _scanner.SetAccess(access);
-                    _scanner.GetAddressesByString("comm");
+                    _scanner.GetAddresses("comm");
 
                     if (_scanner.Settings.PauseWhileScanning)
                         _processesPaused.Remove(access.Process);
@@ -131,7 +135,7 @@ namespace ConsoleExample
                 foreach (var b in dumper.GetByteArray(address))
                     Console.Write($"{b.ToString("x2").ToUpper()} ");
 
-                Console.WriteLine($": {dumper.GetString(address)}");
+                Console.WriteLine($": {dumper.Read<string>(address)}");
             }
         }
 

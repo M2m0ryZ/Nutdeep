@@ -5,28 +5,28 @@ namespace Nutdeep.Utils
 {
     internal class MemoryProperties
     {
-        internal Type Type { get; set; }
-        internal State State { get; set; }
-        internal Protect Protect { get; set; }
+        internal MType Type { get; set; }
+        internal MState State { get; set; }
+        internal MProtect Protect { get; set; }
 
         internal static MemoryProperties Parse(MemoryInformation inf)
         {
             return new MemoryProperties()
             {
-                State = new State()
+                State = new MState()
                 {
                     IsFree = (inf.State & (uint)MemoryState.Free) != 0,
                     IsCommited = (inf.State & (uint)MemoryState.Commit) != 0,
                     IsReserved = (inf.State & (uint)MemoryState.Reserve) != 0
                 },
-                Type = new Type()
+                Type = new MType()
                 {
                     IsNone = (inf.Type & (uint)MemoryType.None) != 0,
                     IsMapped = (inf.Type & (uint)MemoryType.Mapped) != 0,
                     IsPrivate = (inf.Type & (uint)MemoryType.Private) != 0,
                     IsImageMapped = (inf.Type & (uint)MemoryType.Image) != 0
                 },
-                Protect = new Protect()
+                Protect = new MProtect()
                 {
                     IsGuard = (inf.Protect & (uint)MemoryProtection.Guard) != 0,
                     NoCache = (inf.Protect & (uint)MemoryProtection.NoCache) != 0,
@@ -43,7 +43,7 @@ namespace Nutdeep.Utils
         }
     }
 
-    internal class Protect
+    internal class MProtect
     {
         internal bool IsGuard { get; set; }
         internal bool NoCache { get; set; }
@@ -57,14 +57,14 @@ namespace Nutdeep.Utils
         internal bool IsCopyOnWrite { get; set; }
     }
 
-    internal class State
+    internal class MState
     {
         internal bool IsFree { get; set; }
         internal bool IsCommited { get; set; }
         internal bool IsReserved { get; set; }
     }
 
-    internal class Type
+    internal class MType
     {
         internal bool IsNone { get; set; }
         internal bool IsMapped { get; set; }

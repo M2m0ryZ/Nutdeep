@@ -14,7 +14,6 @@ using static Nutdeep.Utils.Delegates.Delegates;
 
 /**
  * MemoryScanner - Written by Jeremi Martini (Aka Adversities)
- * Date: 10/30/2017
  */
 namespace Nutdeep.Tools
 {
@@ -135,7 +134,7 @@ namespace Nutdeep.Tools
         {
             if (!caseSensitive)
             {
-                var regionString = _dumper.GetString(baseAddress,
+                var regionString = _dumper.Read<string>(baseAddress,
                     region.Length).ToLower();
                 var regionFixed = Encoding.ASCII.GetBytes(regionString);
 
@@ -287,7 +286,7 @@ namespace Nutdeep.Tools
             {
                 for (int i = 0; i < addresses.Length; i++)
                 {
-                    var current = _dumper.GetString(addresses[i], buff.Length).ToLower();
+                    var current = _dumper.Read<string>(addresses[i], buff.Length).ToLower();
                     var fixedCurrent = Encoding.ASCII.GetBytes(current);
 
                     var buffStr = Encoding.ASCII.GetString(buff).ToLower();
@@ -334,81 +333,118 @@ namespace Nutdeep.Tools
             return nextAddresses;
         }
 
-        public IntPtr[] GetAddressesByInt32(int obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByInt32(IntPtr[] addresses, int obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByUInt32(uint obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByUInt32(IntPtr[] addresses, uint obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByChar(char obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByChar(IntPtr[] addresses, char obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByBoolean(bool obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByBoolean(IntPtr[] addresses, bool obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByInt64(long obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByInt64(IntPtr[] addresses, long obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByUInt64(ulong obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByUInt64(IntPtr[] addresses, ulong obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByFloat(float obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByFloat(IntPtr[] addresses, float obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByInt16(short obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByInt16(IntPtr[] addresses, short obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByUInt16(ushort obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByUInt16(IntPtr[] addresses, ushort obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByDouble(double obj)
-        => General(BitConverter.GetBytes(obj)).ToArray();
-        public IntPtr[] GetAddressesByDouble(IntPtr[] addresses, double obj)
-        => General(addresses, BitConverter.GetBytes(obj)).ToArray();
-
-        public IntPtr[] GetAddressesByDecimal(decimal obj)
+        public IntPtr[] GetAddresses<T>(T obj, bool caseSensitive = true)
         {
-            var bytes = decimal.GetBits(obj).SelectMany(
-                x => BitConverter.GetBytes(x)).ToArray();
-
-            return General(bytes).ToArray();
-        }
-        public IntPtr[] GetAddressesByDecimal(IntPtr[] addresses, decimal obj)
-        {
-            var bytes = decimal.GetBits(obj).SelectMany(
-                x => BitConverter.GetBytes(x)).ToArray();
-
-            return General(addresses, bytes).ToArray();
+            var type = typeof(T);
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Boolean:
+                    return General(BitConverter.GetBytes(
+                         (bool)(object)obj)).ToArray();
+                case TypeCode.Char:
+                    return General(BitConverter.GetBytes(
+                        (char)(object)obj)).ToArray();
+                case TypeCode.SByte:
+                    return General(BitConverter.GetBytes(
+                        (sbyte)(object)obj)).ToArray();
+                case TypeCode.Byte:
+                    return General(BitConverter.GetBytes(
+                        (byte)(object)obj)).ToArray();
+                case TypeCode.Int16:
+                    return General(BitConverter.GetBytes(
+                        (short)(object)obj)).ToArray();
+                case TypeCode.UInt16:
+                    return General(BitConverter.GetBytes(
+                        (ushort)(object)obj)).ToArray();
+                case TypeCode.Int32:
+                    return General(BitConverter.GetBytes(
+                        (int)(object)obj)).ToArray();
+                case TypeCode.UInt32:
+                    return General(BitConverter.GetBytes(
+                        (uint)(object)obj)).ToArray();
+                case TypeCode.Int64:
+                    return General(BitConverter.GetBytes(
+                        (long)(object)obj)).ToArray();
+                case TypeCode.UInt64:
+                    return General(BitConverter.GetBytes(
+                        (ulong)(object)obj)).ToArray();
+                case TypeCode.Single:
+                    return General(BitConverter.GetBytes(
+                        (float)(object)obj)).ToArray();
+                case TypeCode.Double:
+                    return General(BitConverter.GetBytes(
+                        (double)(object)obj)).ToArray();
+                case TypeCode.Decimal:
+                    var bytes = decimal.GetBits(
+                        (decimal)(object)obj).SelectMany(
+                        x => BitConverter.GetBytes(x)).ToArray();
+                    return General(bytes).ToArray();
+                case TypeCode.String:
+                    return General(Encoding.UTF8.GetBytes(
+                        (string)(object)obj), caseSensitive:
+                        caseSensitive).ToArray();
+                default:
+                    if (type == typeof(byte[]))
+                        return General((byte[])(object)obj).ToArray();
+                    else throw new TypeNotSupportedException(type);
+            }
         }
 
-        public IntPtr[] GetAddressesByString(string obj, bool caseSensitive = true)
-        => General(Encoding.UTF8.GetBytes(obj), caseSensitive: caseSensitive).ToArray();
-        public IntPtr[] GetAddressesByString(IntPtr[] addresses, string obj, bool caseSensitive = true)
-        => General(addresses, Encoding.UTF8.GetBytes(obj), caseSensitive).ToArray();
-
-        public IntPtr[] GetAddressesByByteArray(byte[] obj)
-        => General(obj).ToArray();
-        public IntPtr[] GetAddressesByByteArray(IntPtr[] addresses, byte[] obj)
-        => General(addresses, obj).ToArray();
-
-        
+        public IntPtr[] GetAddresses<T>(IntPtr[] addresses, T obj, bool caseSensitive = true)
+        {
+            var type = typeof(T);
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Boolean:
+                    return General(addresses, BitConverter.GetBytes(
+                         (bool)(object)obj)).ToArray();
+                case TypeCode.Char:
+                    return General(addresses, BitConverter.GetBytes(
+                        (char)(object)obj)).ToArray();
+                case TypeCode.SByte:
+                    return General(addresses, BitConverter.GetBytes(
+                        (sbyte)(object)obj)).ToArray();
+                case TypeCode.Byte:
+                    return General(addresses, BitConverter.GetBytes(
+                        (byte)(object)obj)).ToArray();
+                case TypeCode.Int16:
+                    return General(addresses, BitConverter.GetBytes(
+                        (short)(object)obj)).ToArray();
+                case TypeCode.UInt16:
+                    return General(addresses, BitConverter.GetBytes(
+                        (ushort)(object)obj)).ToArray();
+                case TypeCode.Int32:
+                    return General(addresses, BitConverter.GetBytes(
+                        (int)(object)obj)).ToArray();
+                case TypeCode.UInt32:
+                    return General(addresses, BitConverter.GetBytes(
+                        (uint)(object)obj)).ToArray();
+                case TypeCode.Int64:
+                    return General(addresses, BitConverter.GetBytes(
+                        (long)(object)obj)).ToArray();
+                case TypeCode.UInt64:
+                    return General(addresses, BitConverter.GetBytes(
+                        (ulong)(object)obj)).ToArray();
+                case TypeCode.Single:
+                    return General(addresses, BitConverter.GetBytes(
+                        (float)(object)obj)).ToArray();
+                case TypeCode.Double:
+                    return General(addresses, BitConverter.GetBytes(
+                        (double)(object)obj)).ToArray();
+                case TypeCode.Decimal:
+                    var bytes = decimal.GetBits(
+                        (decimal)(object)obj).SelectMany(
+                        x => BitConverter.GetBytes(x)).ToArray();
+                    return General(addresses, bytes).ToArray();
+                case TypeCode.String:
+                    return General(addresses, Encoding.UTF8.GetBytes(
+                        (string)(object)obj), caseSensitive:
+                        caseSensitive).ToArray();
+                default:
+                    if (type == typeof(byte[]))
+                        return General(addresses, (byte[])(object)obj).ToArray();
+                    else throw new TypeNotSupportedException(type);
+            }
+        }
     }
 }

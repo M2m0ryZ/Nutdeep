@@ -6,7 +6,6 @@ using Nutdeep.Utils.Extensions;
 
 /**
  * MemoryDumper - Written by Jeremi Martini (Aka Adversities)
- * Date: 10/30/2017
  */
 namespace Nutdeep.Tools
 {
@@ -28,76 +27,58 @@ namespace Nutdeep.Tools
             _handle = _access.Handle;
         }
 
-        public bool GetBoolean(IntPtr address)
+        public T Read<T>(IntPtr address, int byteOrStringLenght = 16)
         {
-            var bytes = GetByteArray(address, sizeof(uint));
-            return BitConverter.ToBoolean(bytes, 0);
-        }
-
-        public char GetChar(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(char));
-            return BitConverter.ToChar(bytes, 0);
-        }
-
-        public short GetInt16(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(short));
-            return BitConverter.ToInt16(bytes, 0);
-        }
-
-        public ushort GetUInt16(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(ushort));
-            return BitConverter.ToUInt16(bytes, 0);
-        }
-
-        public int GetInt32(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(int));
-            return BitConverter.ToInt32(bytes, 0);
-        }
-
-        public uint GetUInt32(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(uint));
-            return BitConverter.ToUInt32(bytes, 0);
-        }
-
-        public long GetInt64(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(long));
-            return BitConverter.ToInt64(bytes, 0);
-        }
-
-        public ulong GetUInt64(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(ulong));
-            return BitConverter.ToUInt64(bytes, 0);
-        }
-
-        public float GetFloat(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(float));
-            return BitConverter.ToSingle(bytes, 0);
-        }
-
-        public double GetDouble(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(double));
-            return BitConverter.ToDouble(bytes, 0);
-        }
-
-        public decimal GetDecimal(IntPtr address)
-        {
-            var bytes = GetByteArray(address, sizeof(decimal));
-            return bytes.ToDecimal();
-        }
-
-        public string GetString(IntPtr address, int length = 16)
-        {
-            var bytes = GetByteArray(address, length);
-            return Encoding.ASCII.GetString(bytes);
+            var type = typeof(T);
+            switch (Type.GetTypeCode(type))
+            {
+                case TypeCode.Boolean:
+                    var bytesToBoolean = GetByteArray(address, sizeof(bool));
+                    return (T)(object)BitConverter.ToBoolean(bytesToBoolean, 0);
+                case TypeCode.Char:
+                    var bytesToChar = GetByteArray(address, sizeof(char));
+                    return (T)(object)BitConverter.ToChar(bytesToChar, 0);
+                case TypeCode.SByte:
+                    var bytesToSByte = GetByteArray(address, sizeof(sbyte));
+                    return (T)(object)Convert.ToSByte(bytesToSByte);
+                case TypeCode.Byte:
+                    var bytesToByte = GetByteArray(address, sizeof(byte));
+                    return (T)(object)BitConverter.ToBoolean(bytesToByte, 0);
+                case TypeCode.Int16:
+                    var bytesToInt16 = GetByteArray(address, sizeof(short));
+                    return (T)(object)BitConverter.ToInt16(bytesToInt16, 0);
+                case TypeCode.UInt16:
+                    var bytesToUInt16 = GetByteArray(address, sizeof(ushort));
+                    return (T)(object)BitConverter.ToUInt16(bytesToUInt16, 0);
+                case TypeCode.Int32:
+                    var bytesToInt32 = GetByteArray(address, sizeof(int));
+                    return (T)(object)BitConverter.ToInt32(bytesToInt32, 0);
+                case TypeCode.UInt32:
+                    var bytesToUInt32 = GetByteArray(address, sizeof(uint));
+                    return (T)(object)BitConverter.ToUInt32(bytesToUInt32, 0);
+                case TypeCode.Int64:
+                    var bytesToInt64 = GetByteArray(address, sizeof(long));
+                    return (T)(object)BitConverter.ToInt64(bytesToInt64, 0);
+                case TypeCode.UInt64:
+                    var bytesToUInt64 = GetByteArray(address, sizeof(ulong));
+                    return (T)(object)BitConverter.ToUInt64(bytesToUInt64, 0);
+                case TypeCode.Single:
+                    var bytesToSingle = GetByteArray(address, sizeof(float));
+                    return (T)(object)BitConverter.ToSingle(bytesToSingle, 0);
+                case TypeCode.Double:
+                    var bytesToDouble = GetByteArray(address, sizeof(double));
+                    return (T)(object)BitConverter.ToDouble(bytesToDouble, 0);
+                case TypeCode.Decimal:
+                    var bytesToDecimal = GetByteArray(address, sizeof(decimal));
+                    return (T)(object)bytesToDecimal.ToDecimal();
+                case TypeCode.String:
+                    var bytesToString = GetByteArray(address, byteOrStringLenght);
+                    return (T)(object)Encoding.ASCII.GetString(bytesToString);
+                default:
+                    if (type == typeof(byte[]))
+                        return (T)(object)GetByteArray(address, byteOrStringLenght);
+                    else throw new TypeNotSupportedException(type);
+            }
         }
 
         public byte[] GetByteArray(IntPtr address, int length = 16)
@@ -113,18 +94,5 @@ namespace Nutdeep.Tools
 
             return buff;
         }
-
-        
-    }
-
-    public struct MemoryInformation
-    {
-        public IntPtr BaseAddress;
-        public IntPtr AllocationBase;
-        public uint AllocationProtect;
-        public uint RegionSize;
-        public uint State;
-        public uint Protect;
-        public uint Type;
     }
 }
