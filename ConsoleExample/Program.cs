@@ -13,12 +13,12 @@ namespace ConsoleExample
     class Program : ConsoleHandler
     {
         MemoryScanner _scanner;
-        IList<Process> _processPaused;
+        IList<Process> _processesPaused;
         Program()
         {
             OnClose(On_Close);
 
-            _processPaused = new List<Process>();
+            _processesPaused = new List<Process>();
 
             _scanner = new MemoryScanner()
             {
@@ -38,7 +38,7 @@ namespace ConsoleExample
 
         void Run()
         {
-            //ScanAllProcess();
+            ScanAllProcess();
             ScanNotepad();
 
             Console.ReadLine();
@@ -66,7 +66,12 @@ namespace ConsoleExample
                 //scanner.SetSettings(ScanSettings); you got this if you want any special shit
                 //as i dont care about events for this, i'll make this local instance
 
-                SEARCH:
+                //if you scan from here, and you enabled 
+                //"PauseWhileScanning" please dont forgot to do this
+                if (scanner.Settings.PauseWhileScanning)
+                    _processesPaused.Add(access.Process);
+
+                    SEARCH:
                 Console.Write("Gimme a string to search throw notepad: ");
 
                 var str = Console.ReadLine();
@@ -98,6 +103,9 @@ namespace ConsoleExample
                 Console.ReadLine();
 
                 PrintMemoryView(changed, access);
+
+                //as all the scans were done without problems (like unexpected exit)
+                _processesPaused.Remove(access.Process);
             }
         }
 
@@ -133,8 +141,8 @@ namespace ConsoleExample
 
         private void On_Close()
         {
-            if (_processPaused.Count > 0)
-                foreach (var process in _processPaused)
+            if (_processesPaused.Count > 0)
+                foreach (var process in _processesPaused)
                     process.Resume();
         }
     }

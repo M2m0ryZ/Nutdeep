@@ -18,6 +18,7 @@ using static Nutdeep.Utils.Delegates.Delegates;
  */
 namespace Nutdeep.Tools
 {
+    //TODO: multi-thread scan
     public class MemoryScanner
     {
         public event ScanEndsEventHandler ScanEnds;
