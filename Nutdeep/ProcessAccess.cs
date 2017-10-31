@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using Nutdeep.Tools;
 using Nutdeep.Exceptions;
 using Nutdeep.Tools.Flags;
+using System.ComponentModel;
 
 /**
  * ProcessAccess - Written by Jeremi Martini (Aka Adversities)
@@ -64,12 +65,19 @@ namespace Nutdeep
             if (!IsAdministrator())
                 throw new MissingAdminRightsException();
 
-            Handle = Pinvoke.OpenProcess(ProcessAccessLevel.All,
+            SetHighestThreadPriority();
+
+            try
+            {
+                Handle = Pinvoke.OpenProcess(ProcessAccessLevel.All,
                 false, processId);
+            }
+            catch (Win32Exception)
+            {
+                throw new Win32Exception($"It's not possible to open {Process.ProcessName}");
+            }
 
             IsHandleClosed = false;
-
-            SetHighestThreadPriority();
         }
 
         public void Dispose()

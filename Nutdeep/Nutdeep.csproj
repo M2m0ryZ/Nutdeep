@@ -54,6 +54,7 @@
     <Compile Include="Tools\Pinvoke.cs" />
     <Compile Include="Tools\ScanSettings.cs" />
     <Compile Include="Utils\ConsoleHandler.cs" />
+    <Compile Include="Utils\CustomTypes\WildCard.cs" />
     <Compile Include="Utils\Delegates.cs" />
     <Compile Include="Utils\EventArguments\ScanEndsEventArgs.cs" />
     <Compile Include="Utils\Extensions\ByteArrayExtension.cs" />

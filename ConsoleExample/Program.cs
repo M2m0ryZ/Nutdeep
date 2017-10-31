@@ -7,6 +7,8 @@ using Nutdeep.Tools;
 using Nutdeep.Utils;
 using Nutdeep.Utils.Extensions;
 using Nutdeep.Utils.EventArguments;
+using System.ComponentModel;
+using Nutdeep.Utils.CustomTypes;
 
 namespace ConsoleExample
 {
@@ -26,7 +28,7 @@ namespace ConsoleExample
                 //please feel free to use any of them
                 Settings = new ScanSettings()
                 {
-                    Writable = false //I'm just showing it, it's like this be default
+                    Writable = true //I'm just showing it, it's like this be default
                 }
             };
 
@@ -38,8 +40,8 @@ namespace ConsoleExample
 
         void Run()
         {
-            //ScanAllProcess();
-            ScanNotepad();
+            ScanAllProcess();
+            //ScanNotepad();
 
             Console.ReadLine();
         }
@@ -51,10 +53,6 @@ namespace ConsoleExample
                 SetTitle(access.ToString());
 
                 MemoryScanner scanner = access;
-                scanner.SetSettings(new ScanSettings()
-                {
-                    Writable = false
-                });
                 //scanner.SetSettings(ScanSettings); you got this if you want any special shit
                 //as i dont care about events for this, i made this local instance
 
@@ -68,6 +66,8 @@ namespace ConsoleExample
 
                 var str = Console.ReadLine();
                 var addresses = scanner.GetAddresses(str);
+
+                Console.Beep();
 
                 if (addresses.Length == 0)
                 {
@@ -85,10 +85,10 @@ namespace ConsoleExample
                 var value = Console.ReadLine();
 
                 MemoryEditor editor = access;
-                editor.Write<string>(addresses[index], value);
+                editor.Write(addresses[index], value);
 
                 //This is "Next Scan"
-                var changed = scanner.GetAddresses(addresses, value);
+                var changed = scanner.NextAddresses(addresses, value);
 
                 Console.WriteLine($"{changed.Length} from the last scan has the new value: {value}");
                 Console.Write("Press enter to show them/it...");
@@ -106,17 +106,23 @@ namespace ConsoleExample
         {
             foreach (var process in Process.GetProcesses())
             {
-                using (var access = new ProcessAccess(process.Id))
+                try
                 {
-                    if (_scanner.Settings.PauseWhileScanning)
-                        _processesPaused.Add(access.Process);
+                    using (var access = new ProcessAccess(process.Id))
+                    {
+                        _scanner.SetAccess(access);
 
-                    _scanner.SetAccess(access);
-                    _scanner.GetAddresses("comm");
+                        SetTitle(access.ToString());
 
-                    if (_scanner.Settings.PauseWhileScanning)
-                        _processesPaused.Remove(access.Process);
-                }
+                        if (_scanner.Settings.PauseWhileScanning)
+                            _processesPaused.Add(access.Process);
+
+                        _scanner.GetAddresses("comm");
+
+                        if (_scanner.Settings.PauseWhileScanning)
+                            _processesPaused.Remove(access.Process);
+                    }
+                } catch { }
             }
         }
 
@@ -135,7 +141,7 @@ namespace ConsoleExample
                 foreach (var b in dumper.GetByteArray(address))
                     Console.Write($"{b.ToString("x2").ToUpper()} ");
 
-                Console.WriteLine($": {dumper.Read<string>(address)}");
+                Console.WriteLine($": {dumper.Read<string>(address, 32)}");
             }
         }
 
@@ -149,6 +155,7 @@ namespace ConsoleExample
         private void Scan_Ends(object sender, ScanEndsEventArgs args)
         {
             Console.WriteLine(args.ToString());
+            Console.Beep();
             Console.WriteLine("Press enter to show the results...");
             Console.ReadLine();
 
