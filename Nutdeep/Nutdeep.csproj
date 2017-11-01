@@ -67,5 +67,8 @@
     <Compile Include="Utils\MemoryInformation.cs" />
     <Compile Include="Utils\MemoryProperties.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Helpers\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

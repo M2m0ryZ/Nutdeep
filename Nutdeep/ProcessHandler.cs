@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Diagnostics;
 using System.ComponentModel;
@@ -7,11 +8,12 @@ using System.Security.Principal;
 using Nutdeep.Tools;
 using Nutdeep.Exceptions;
 using Nutdeep.Tools.Flags;
+using Nutdeep.Utils.Extensions;
 
 namespace Nutdeep
 {
     public class ProcessHandler : ProcessAccess, IDisposable
-    { 
+    {
         internal static bool IsHandleClosed { get; private set; }
 
         internal static void CheckAccess()
@@ -33,10 +35,7 @@ namespace Nutdeep
                 Process = Process.GetProcessById(processId);
 
             }
-            catch (ArgumentException)
-            {
-                throw new ProcessNotFoundException();
-            }
+            catch { throw new ProcessNotFoundException(); }
 
             SetupProcessAccess(Process.Id);
         }
@@ -49,7 +48,13 @@ namespace Nutdeep
 
         public ProcessHandler(string processName, int index = 0)
         {
-            Process = GetProcessByName(processName, index);
+            Process = processName.Contains("&flash") ?
+                Process.GetProcessesByName("chrome")
+                .Where(task => task.RunsShockwaveFlash())
+                .FirstOrDefault() : GetProcessByName(processName, index);
+
+            if(Process == null) throw new ProcessNotFoundException();
+
             SetupProcessAccess(Process.Id);
         }
 
@@ -117,7 +122,14 @@ namespace Nutdeep
         }
 
         public override string ToString()
-            => $"{Process.Id.ToString("x8").ToUpper()}" +
-            $"-{Process.MainModule.ModuleName}";
+        {
+            var inf = $"{Process.Id.ToString("x8").ToUpper()}" +
+                $"-{Process.MainModule.ModuleName}";
+
+            if (Process.RunsShockwaveFlash())
+                return $"{inf} [ShockwaveFlash]";
+
+            return inf;
+        }
     }
 }
