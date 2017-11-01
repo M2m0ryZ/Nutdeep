@@ -18,7 +18,7 @@ using Nutdeep.Utils.CustomTypes;
  */
 namespace Nutdeep.Tools
 {
-    //TODO: multi-thread scan
+    //TODO: multi-thread scan #Task class will help ya
     public class MemoryScanner : MemoryHelper
     {
         public event ScanEndsEventHandler ScanEnds;
@@ -352,8 +352,8 @@ namespace Nutdeep.Tools
         
         public IntPtr[] GetAddresses(string str, bool caseSensitive = true)
         {
-            return General(Encoding.UTF8.GetBytes(str), caseSensitive:
-                caseSensitive).ToArray();
+            return General(Encoding.ASCII.GetBytes(str), caseSensitive:
+                caseSensitive).ToArray(); //We ain't going with Unicode strings
         }
 
         public IntPtr[] NextAddresses<T>(IntPtr[] addresses, T obj)
@@ -370,8 +370,8 @@ namespace Nutdeep.Tools
         
         public IntPtr[] NextAddresses(IntPtr[] addresses, string str, bool caseSensitive = true)
         {
-            return General(addresses, Encoding.UTF8.GetBytes(str), 
-                caseSensitive: caseSensitive).ToArray();
+            return General(addresses, Encoding.ASCII.GetBytes(str), 
+                caseSensitive: caseSensitive).ToArray(); //shit now UTF8 do you even decide
         }
     }
 }
