@@ -1,5 +1,6 @@
 ﻿namespace Nutdeep.Tools
 {
+    //TODO: change nullable with enums, pls m3n
     public class ScanSettings
     {
         /// <summary>

@@ -7,145 +7,156 @@ using Nutdeep.Tools;
 using Nutdeep.Utils;
 using Nutdeep.Utils.Extensions;
 using Nutdeep.Utils.EventArguments;
-using System.ComponentModel;
 using Nutdeep.Utils.CustomTypes;
 
 namespace ConsoleExample
 {
+    //Should i leave something simpler or is this fine?
     class Program : ConsoleHandler
     {
+        ScanSettings settings;
         MemoryScanner _scanner;
         IList<Process> _processesPaused;
         Program()
         {
-            OnClose(On_Close);
+            OnClose(Console_OnClose);
 
+            settings = new ScanSettings()
+            {
+                Writable = null
+            };
+            _scanner = new MemoryScanner();
             _processesPaused = new List<Process>();
 
-            _scanner = new MemoryScanner()
-            {
-                //You have here all the settings as CheatEngine 
-                //please feel free to use any of them
-                Settings = new ScanSettings()
-                {
-                    Writable = true //I'm just showing it, it's like this be default
-                }
-            };
-
-            //This is most for when you are going to scan throw many process
             _scanner.ScanEnds += Scan_Ends;
         }
 
         static void Main(string[] args) => new Program().Run();
 
-        void Run()
+        private void Run()
         {
             ScanAllProcess();
-            //ScanNotepad();
+            OpenNotepadHandle();
 
             Console.ReadLine();
         }
 
-        void ScanNotepad()
+
+
+        private void OpenNotepadHandle()
         {
-            using (var access = new ProcessAccess("notepad"))
+            using (var handler = new ProcessHandler("notepad"))
             {
-                SetTitle(access.ToString());
+                SetTitle(handler.ToString());
 
-                MemoryScanner scanner = access;
-                //scanner.SetSettings(ScanSettings); you got this if you want any special shit
-                //as i dont care about events for this, i made this local instance
+                var addresses = ScanInNotepad(handler);
+                var writed = WriteInNotepad(handler, addresses);
+                var newAddresses = NextScanInNotepad(handler, addresses, writed);
 
-                //if you scan from here, and you enabled 
-                //"PauseWhileScanning" please dont forgot to do this
-                if (scanner.Settings.PauseWhileScanning)
-                    _processesPaused.Add(access.Process);
-
-                SEARCH:
-                Console.Write("Gimme a string to search throw notepad: ");
-
-                var str = Console.ReadLine();
-                var addresses = scanner.GetAddresses(str);
-
-                Console.Beep();
-
-                if (addresses.Length == 0)
-                {
-                    Console.WriteLine("Found nothing (Pedo*)");
-                    goto SEARCH;
-                }
-
-                GIMME:
-                Console.Write($"Got {addresses.Length} results, gimme an address index to edit its memory: ");
-
-                if (!int.TryParse(Console.ReadLine(), out int index)) goto GIMME;
-
-                Console.Write($"Gimme a value to write it on {addresses[index].ToString("x8").ToUpper()}: ");
-
-                var value = Console.ReadLine();
-
-                MemoryEditor editor = access;
-                editor.Write(addresses[index], value);
-
-                //This is "Next Scan"
-                var changed = scanner.NextAddresses(addresses, value);
-
-                Console.WriteLine($"{changed.Length} from the last scan has the new value: {value}");
-                Console.Write("Press enter to show them/it...");
-                Console.ReadLine();
-
-                PrintMemoryView(changed, access);
-
-                //as all the scans were done without problems (like unexpected exit)
-                if (scanner.Settings.PauseWhileScanning)
-                    _processesPaused.Remove(access.Process);
+                PrintMemoryView(newAddresses, handler);
             }
         }
 
-        void ScanAllProcess()
+        private IntPtr[] ScanInNotepad(ProcessHandler access)
+        {
+            MemoryDumper dumper = access;
+
+            _scanner.SetSettings(new ScanSettings()
+            {
+                Writable = true
+            });
+
+            CheckProcessPaused(access.Process);
+
+            SEARCH:
+            Console.Write("Gimme a string to search throw notepad: ");
+
+            var str = Console.ReadLine();
+            var addresses = _scanner.SearchFor(str);
+
+            //oh btw you can perform a wildcards scarns doing the following:
+            if (false) //Ignore this if, it's just to show you guys how wildcards work...
+                _scanner.SearchFor<Signature>("?? 00 ?? 00 00 00 ?? 0A");
+
+                Console.Beep();
+
+            if (addresses.Length == 0)
+            {
+                Console.WriteLine("Found nothing (Pedo*)");
+                goto SEARCH;
+            }
+
+            //as all the scans were done without problems (like unexpected exit)
+            CheckProcessPaused(access.Process, true);
+
+            return addresses;
+        }
+
+        private string WriteInNotepad(MemoryEditor editor, IntPtr[] addresses)
+        {
+            Console.WriteLine($"We got {addresses.Length} results");
+
+            GIMME:
+            Console.Write("Gimme an index to edit an address: ");
+            if (!int.TryParse(Console.ReadLine(), out int index)) goto GIMME;
+
+            Console.Write($"Gimme a value to write it on {addresses[index].ToString("x8").ToUpper()}: ");
+            var value = Console.ReadLine();
+
+            editor.Write(addresses[index], value);
+
+            return value;
+        }
+
+        private IntPtr[] NextScanInNotepad(ProcessHandler handler, IntPtr[] addresses, string nextValue)
+        {
+            CheckProcessPaused(handler.Process);
+
+            MemoryScanner scanner = handler;
+
+            var changed = scanner.NextSearchFor(addresses, nextValue);
+
+            Console.WriteLine($"{changed.Length} from the last scan has the new value: {nextValue}");
+            Console.Write("Press enter to show them/it...");
+            Console.ReadLine();
+
+            CheckProcessPaused(handler.Process, true);
+
+            return changed;
+        }
+
+
+        private void SetTitle(string inf)
+        {
+            Console.Title = $"Nutdeep - {inf}";
+        }
+
+        private void ScanAllProcess()
         {
             foreach (var process in Process.GetProcesses())
             {
                 try
                 {
-                    using (var access = new ProcessAccess(process.Id))
+                    using (var access = new ProcessHandler(process.Id))
                     {
-                        _scanner.SetAccess(access);
-
                         SetTitle(access.ToString());
+
+                        _scanner.SetAccess(access);
 
                         if (_scanner.Settings.PauseWhileScanning)
                             _processesPaused.Add(access.Process);
 
-                        _scanner.GetAddresses("comm");
+                        _scanner.SearchFor("comm");
 
                         if (_scanner.Settings.PauseWhileScanning)
                             _processesPaused.Remove(access.Process);
                     }
-                } catch { }
+                }
+                catch { }
             }
         }
 
-        void SetTitle(string inf)
-        {
-            Console.Title = $"Nutdeep - {inf}";
-        }
-
-        void PrintMemoryView(IntPtr[] addresses, MemoryDumper dumper)
-        {
-            for (int i = 0; i < addresses.Length; i++)
-            {
-                var address = addresses[i];
-                Console.Write($"([{i}] - {address.ToString("x8").ToUpper()}) => ");
-
-                foreach (var b in dumper.GetByteArray(address))
-                    Console.Write($"{b.ToString("x2").ToUpper()} ");
-
-                Console.WriteLine($": {dumper.Read<string>(address, 32)}");
-            }
-        }
-
-        private void On_Close()
+        private void Console_OnClose()
         {
             if (_processesPaused.Count > 0)
                 foreach (var process in _processesPaused)
@@ -162,6 +173,28 @@ namespace ConsoleExample
             PrintMemoryView(args.Addresses, args.Access);
 
             Console.WriteLine();
+        }
+
+        private void PrintMemoryView(IntPtr[] addresses, MemoryDumper dumper)
+        {
+            for (int i = 0; i < addresses.Length; i++)
+            {
+                var address = addresses[i];
+                Console.Write($"([{i}] - {address.ToString("x8").ToUpper()}) => ");
+
+                foreach (var b in dumper.Read<byte[]>(address))
+                    Console.Write($"{b.ToString("x2").ToUpper()} ");
+
+                Console.WriteLine($": {dumper.Read<string>(address, 32)}");
+            }
+        }
+
+        private void CheckProcessPaused(Process process, bool done = false)
+        {
+            //if (!_isPauseWhileScanning) return;
+
+            if (!done) _processesPaused.Add(process);
+            else _processesPaused.Remove(process);
         }
     }
 }

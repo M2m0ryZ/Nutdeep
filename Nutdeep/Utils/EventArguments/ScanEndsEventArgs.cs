@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 
+using Nutdeep.Tools;
+
 namespace Nutdeep.Utils.EventArguments
 {
     public class ScanEndsEventArgs : EventArgs

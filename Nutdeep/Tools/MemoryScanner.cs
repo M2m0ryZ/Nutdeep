@@ -9,25 +9,21 @@ using System.Collections.ObjectModel;
 using Nutdeep.Utils;
 using Nutdeep.Exceptions;
 using Nutdeep.Utils.Extensions;
+using Nutdeep.Utils.CustomTypes;
 using Nutdeep.Utils.EventArguments;
 using static Nutdeep.Utils.Delegates.Delegates;
-using Nutdeep.Utils.CustomTypes;
 
-/**
- * MemoryScanner - Written by Jeremi Martini (Aka Adversities)
- */
 namespace Nutdeep.Tools
 {
     //TODO: multi-thread scan
-    public class MemoryScanner
+    public class MemoryScanner : MemoryHelper
     {
-        public event ScanEndsEventHandler ScanEnds;
-
-        private IntPtr _handle { get; set; }
         private ProcessAccess _access { get; set; }
 
         private MemoryDumper _dumper;
         private Collection<MemoryInformation> _memoryRegions;
+
+        public event ScanEndsEventHandler ScanEnds;
 
         public ScanSettings Settings { get; set; } = new ScanSettings();
 
@@ -46,7 +42,6 @@ namespace Nutdeep.Tools
         {
             _access = access;
             _dumper = access;
-            _handle = _access.Handle;
         }
 
         public void SetSettings(ScanSettings settings)
@@ -61,7 +56,7 @@ namespace Nutdeep.Tools
             while (true)
             {
                 var memInf = new MemoryInformation();
-                int memDump = Pinvoke.VirtualQueryEx(_handle, addy,
+                int memDump = Pinvoke.VirtualQueryEx(_access.Handle, addy,
                     out memInf, Marshal.SizeOf(memInf));
 
                 if (memDump == 0) return;
@@ -128,8 +123,7 @@ namespace Nutdeep.Tools
             }
         }
 
-        //This is not organize yet but im on it
-        //TODO: Organize this shit adv, wtf...
+        //TODO: Step the scan
         private void Scan(IntPtr baseAddress, byte[] region, byte[] pattern,
             ref Collection<IntPtr> addresses, bool caseSensitive = true)
         {
@@ -221,18 +215,141 @@ namespace Nutdeep.Tools
             }
         }
 
-        //This is to allow a wildcards/nonwildcards scan from the same method
-        //TODO: Wildcard niggeh
-        private IEnumerable<IntPtr> General(WildCard wildCard)
+        private void WildCardScan(IntPtr baseAddress, byte[] region, Signature aobString,
+            ref Collection<IntPtr> addresses)
         {
-            return null;
+            if (aobString.IsUniqueWildCard)
+            {
+                for (int i = 0; i < region.Length; i++)
+                {
+                    var address = new IntPtr((int)baseAddress + i);
+
+                    if (Settings.FastScan)
+                    {
+                        if (Settings.FastScanType == FastScanType.ALIGNMENT)
+                        {
+                            if (((uint)address % Settings.FastScan_Digit) != 0)
+                                continue;
+                        }
+                        else
+                        {
+                            if (((uint)address & 0xf) != Settings.FastScan_Digit)
+                                continue;
+                        }
+                    }
+                    addresses.Add(address);
+                }
+            }
+            else
+            {
+                var offSet = 0;
+                var pattern = aobString.ToWildCardBytes();
+                while ((offSet = Array.IndexOf(region, pattern[0], offSet)) != -1)
+                {
+                    var address = new IntPtr(((int)baseAddress + offSet) - aobString.AmountToSubtract);
+
+                    if (Settings.FastScan)
+                    {
+                        if (Settings.FastScanType == FastScanType.ALIGNMENT)
+                        {
+                            if (((uint)address % Settings.FastScan_Digit) != 0)
+                                goto CONTINUE;
+                        }
+                        else
+                        {
+                            if (((uint)address & 0xF) != Settings.FastScan_Digit)
+                                goto CONTINUE;
+                        }
+                    }
+
+                    if (offSet < aobString.AmountToSubtract)
+                        goto CONTINUE;
+
+                    if (pattern.Length > 1)
+                    {
+                        for (int i = 1; i < pattern.Length; i++)
+                        {
+                            if (region.Length <= offSet + pattern.Length)
+                                break;
+
+                            if (pattern[i] == null)
+                            {
+                                if (i == pattern.Length - 1)
+                                {
+                                    addresses.Add(address);
+                                    break;
+                                }
+                                continue;
+                            }
+
+                            if (pattern[i] != region[offSet + i]) break;
+
+                            if (i == pattern.Length - 1)
+                                addresses.Add(address);
+                        }
+                    }
+                    else addresses.Add(address);
+
+                    CONTINUE: offSet++;
+                }
+            }
+        }
+
+        private IEnumerable<IntPtr> General(Signature aobString)
+        {
+            string pattern = aobString;
+
+            if (!aobString.IsWildCard)
+                return General(aobString.ToBytes());
+
+            ProcessHandler.CheckAccess();
+
+            if (Settings.PauseWhileScanning)
+                _access.Process.Pause();
+
+            Stopwatch benchmark = null;
+            if (ScanEnds != null)
+                benchmark = Stopwatch.StartNew();
+
+            GetRegions();
+
+            var addresses = new Collection<IntPtr>();
+            var memoryRegions = _memoryRegions.ToArray();
+
+            for (int i = 0; i < memoryRegions.Length; i++)
+            {
+                byte[] region = null;
+                var current = _memoryRegions[i];
+
+                try
+                {
+                    region = _dumper.Read<byte[]>(current.BaseAddress,
+                        (int)current.RegionSize);
+                }
+                catch (UnreadableMemoryException) { continue; }
+
+                WildCardScan(current.BaseAddress, region, aobString, ref addresses);
+            }
+
+            if (ScanEnds != null)
+            {
+                benchmark.Stop();
+                ScanEnds.Invoke(this,
+                    new ScanEndsEventArgs(addresses.ToArray(),
+                    benchmark.Elapsed.TotalMilliseconds, _access));
+            }
+
+            if (Settings.PauseWhileScanning)
+                _access.Process.Resume();
+
+            return addresses;
         }
         private IEnumerable<IntPtr> General(IntPtr[] addresses, byte[] buff, bool caseSensitive = true)
         {
             Collection<IntPtr> nextAddresses
                 = new Collection<IntPtr>();
 
-            ProcessAccess.CheckAccess();
+            ProcessHandler.CheckAccess();
 
             if (Settings.PauseWhileScanning)
                 _access.Process.Pause();
@@ -265,7 +382,7 @@ namespace Nutdeep.Tools
                 for (int i = 0; i < addresses.Length; i++)
                 {
                     var current =
-                        _dumper.GetByteArray(addresses[i], buff.Length);
+                        _dumper.Read<byte[]>(addresses[i], buff.Length);
 
                     if (buff[0] != current[0]) continue;
 
@@ -291,9 +408,9 @@ namespace Nutdeep.Tools
 
             return nextAddresses;
         }
-        private IEnumerable<IntPtr> General(byte[] buff = null, string pattern = null, bool caseSensitive = true)
+        private IEnumerable<IntPtr> General(ObjectSearch obj, bool caseSensitive = true)
         {
-            ProcessAccess.CheckAccess();
+            ProcessHandler.CheckAccess();
 
             if (Settings.PauseWhileScanning)
                 _access.Process.Pause();
@@ -314,14 +431,12 @@ namespace Nutdeep.Tools
 
                 try
                 {
-                    region = _dumper.GetByteArray(current.BaseAddress,
-                    (int)current.RegionSize);
+                    region = _dumper.Read<byte[]>(current.BaseAddress,
+                        (int)current.RegionSize);
                 }
                 catch (UnreadableMemoryException) { continue; }
 
-                if (buff != null)
-                    Scan(current.BaseAddress, region, buff, ref addresses, caseSensitive);
-                //else Scan(current.BaseAddress, region, pattern, ref addresses); this is for wildcards
+                Scan(current.BaseAddress, region, obj, ref addresses, caseSensitive);
             }
 
             if (ScanEnds != null)
@@ -338,70 +453,27 @@ namespace Nutdeep.Tools
             return addresses;
         }
 
-        public IntPtr[] GetAddresses<T>(T obj)
+        public IntPtr[] SearchFor<T>(T obj)
         {
             var type = typeof(T);
-            switch (Type.GetTypeCode(type))
+
+            if (type == typeof(Signature))
+                return General((Signature)(object)obj)
+                    .ToArray();
+
+            try
             {
-                case TypeCode.Boolean:
-                    return General(BitConverter.GetBytes(
-                         (bool)(object)obj)).ToArray();
-                case TypeCode.Char:
-                    return General(BitConverter.GetBytes(
-                        (char)(object)obj)).ToArray();
-                case TypeCode.SByte:
-                    return General(BitConverter.GetBytes(
-                        (sbyte)(object)obj)).ToArray();
-                case TypeCode.Byte:
-                    return General(BitConverter.GetBytes(
-                        (byte)(object)obj)).ToArray();
-                case TypeCode.Int16:
-                    return General(BitConverter.GetBytes(
-                        (short)(object)obj)).ToArray();
-                case TypeCode.UInt16:
-                    return General(BitConverter.GetBytes(
-                        (ushort)(object)obj)).ToArray();
-                case TypeCode.Int32:
-                    return General(BitConverter.GetBytes(
-                        (int)(object)obj)).ToArray();
-                case TypeCode.UInt32:
-                    return General(BitConverter.GetBytes(
-                        (uint)(object)obj)).ToArray();
-                case TypeCode.Int64:
-                    return General(BitConverter.GetBytes(
-                        (long)(object)obj)).ToArray();
-                case TypeCode.UInt64:
-                    return General(BitConverter.GetBytes(
-                        (ulong)(object)obj)).ToArray();
-                case TypeCode.Single:
-                    return General(BitConverter.GetBytes(
-                        (float)(object)obj)).ToArray();
-                case TypeCode.Double:
-                    return General(BitConverter.GetBytes(
-                        (double)(object)obj)).ToArray();
-                case TypeCode.Decimal:
-                    var bytes = decimal.GetBits(
-                        (decimal)(object)obj).SelectMany(
-                        x => BitConverter.GetBytes(x)).ToArray();
-                    return General(bytes).ToArray();
-                case TypeCode.String:
-                    return General(Encoding.UTF8.GetBytes(
-                        (string)(object)obj)).ToArray();
-                default:
-                    if (type == typeof(byte[]))
-                        return General((byte[])(object)obj).ToArray();
-                    else if (type == typeof(WildCard))
-                        return General((WildCard)(object)obj).ToArray();
-                    else throw new TypeNotSupportedException(type);
+                return General(Parse(obj)).ToArray();
             }
+            catch { throw new TypeNotSupportedException(type); }
         }
-        public IntPtr[] GetAddresses(string str, bool caseSensitive = true)
+        public IntPtr[] SearchFor(string str, bool caseSensitive = true)
         {
-            return General(Encoding.UTF8.GetBytes(str), caseSensitive:
+            return General(Encoding.ASCII.GetBytes(str), caseSensitive:
                 caseSensitive).ToArray();
         }
 
-        public IntPtr[] NextAddresses<T>(IntPtr[] addresses, T obj)
+        public IntPtr[] NextSearchFor<T>(IntPtr[] addresses, T obj)
         {
             var type = typeof(T);
             switch (Type.GetTypeCode(type))
@@ -448,19 +520,19 @@ namespace Nutdeep.Tools
                         x => BitConverter.GetBytes(x)).ToArray();
                     return General(addresses, bytes).ToArray();
                 case TypeCode.String:
-                    return General(addresses, Encoding.UTF8.GetBytes(
+                    return General(addresses, Encoding.ASCII.GetBytes(
                         (string)(object)obj)).ToArray();
                 default:
                     if (type == typeof(byte[]))
                         return General(addresses, (byte[])(object)obj).ToArray();
-                    else if (type == typeof(WildCard))
-                        return General((WildCard)(object)obj).ToArray();
+                    else if (type == typeof(Signature))
+                        return General((Signature)(object)obj).ToArray();
                     else throw new TypeNotSupportedException(type);
             }
         }
-        public IntPtr[] NextAddresses(IntPtr[] addresses, string str, bool caseSensitive = true)
+        public IntPtr[] NextSearchFor(IntPtr[] addresses, string str, bool caseSensitive = true)
         {
-            return General(addresses, Encoding.UTF8.GetBytes(str), 
+            return General(addresses, Encoding.ASCII.GetBytes(str),
                 caseSensitive: caseSensitive).ToArray();
         }
     }

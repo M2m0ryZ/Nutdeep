@@ -1,29 +1,22 @@
 ﻿using System;
 using System.Threading;
 using System.Diagnostics;
+using System.ComponentModel;
 using System.Security.Principal;
-using System.Runtime.InteropServices;
 
 using Nutdeep.Tools;
 using Nutdeep.Exceptions;
 using Nutdeep.Tools.Flags;
-using System.ComponentModel;
 
-/**
- * ProcessAccess - Written by Jeremi Martini (Aka Adversities)
- * Date: 10/30/2017
- */
 namespace Nutdeep
 {
-    public class ProcessAccess : IDisposable
-    {
-        public IntPtr Handle { get; private set; }
-        public Process Process { get; private set; }
-
+    public class ProcessHandler : ProcessAccess, IDisposable
+    { 
         internal static bool IsHandleClosed { get; private set; }
+
         internal static void CheckAccess()
         {
-            if (ProcessAccess.IsHandleClosed)
+            if (IsHandleClosed)
                 throw new AccessNotFoundException();
         }
 
@@ -33,7 +26,7 @@ namespace Nutdeep
             set => Thread.CurrentThread.Priority = value;
         }
 
-        public ProcessAccess(int processId)
+        public ProcessHandler(int processId)
         {
             try
             {
@@ -48,13 +41,13 @@ namespace Nutdeep
             SetupProcessAccess(Process.Id);
         }
 
-        public ProcessAccess(Process process)
+        public ProcessHandler(Process process)
         {
             Process = process;
             SetupProcessAccess(Process.Id);
         }
 
-        public ProcessAccess(string processName, int index = 0)
+        public ProcessHandler(string processName, int index = 0)
         {
             Process = GetProcessByName(processName, index);
             SetupProcessAccess(Process.Id);
@@ -80,6 +73,30 @@ namespace Nutdeep
             IsHandleClosed = false;
         }
 
+        private bool IsAdministrator()
+        => (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
+                .IsInRole(WindowsBuiltInRole.Administrator);
+
+        private void SetHighestThreadPriority()
+        {
+            Priority = ThreadPriority.Highest;
+        }
+
+        private void SetNormalThreadPriority()
+        {
+            Priority = ThreadPriority.Normal;
+        }
+
+        private Process GetProcessByName(string processName, int index)
+        {
+            var processes = Process.GetProcessesByName(processName);
+
+            if (processes.Length == 0)
+                throw new ProcessNotFoundException();
+
+            return processes[index];
+        }
+
         public void Dispose()
         {
             Dispose(true);
@@ -94,37 +111,10 @@ namespace Nutdeep
                 Handle = IntPtr.Zero;
                 IsHandleClosed = true;
 
+                SetNormalThreadPriority();
                 Pinvoke.CloseHandle(Handle);
             }
         }
-
-        private Process GetProcessByName(string processName, int index)
-        {
-            var processes = Process.GetProcessesByName(processName);
-
-            if (processes.Length == 0)
-                throw new ProcessNotFoundException();
-
-            return processes[index];
-        }
-
-        private bool IsAdministrator()
-        => (new WindowsPrincipal(WindowsIdentity.GetCurrent()))
-                .IsInRole(WindowsBuiltInRole.Administrator);
-
-        private void SetHighestThreadPriority()
-        {
-            Priority = ThreadPriority.Highest;
-        }
-
-        public static implicit operator MemoryDumper(ProcessAccess access)
-        => new MemoryDumper(access);
-
-        public static implicit operator MemoryScanner(ProcessAccess access)
-        => new MemoryScanner(access);
-
-        public static implicit operator MemoryEditor(ProcessAccess access)
-        => new MemoryEditor(access);
 
         public override string ToString()
             => $"{Process.Id.ToString("x8").ToUpper()}" +
