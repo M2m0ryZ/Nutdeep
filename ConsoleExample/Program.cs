@@ -6,6 +6,7 @@ using Nutdeep;
 using Nutdeep.Tools;
 using Nutdeep.Utils;
 using Nutdeep.Utils.Extensions;
+using Nutdeep.Utils.CustomTypes;
 using Nutdeep.Utils.EventArguments;
 
 namespace ConsoleExample
@@ -21,12 +22,12 @@ namespace ConsoleExample
 
             _settings = new ScanSettings()
             {
-                Writable = true
+                Writable = ScanType.NOT,
             };
             _scanner = new MemoryScanner();
             _processesPaused = new List<Process>();
 
-            _scanner.ScanEnds += Scan_Ends;
+            //_scanner.SearchResult += Search_Result;
         }
 
         static void Main(string[] args) => new Program().Run();
@@ -40,19 +41,19 @@ namespace ConsoleExample
 
         private void OpenNotepadHandle()
         {
-            //If you wanna get the flash player task from chrome, use &flash
-            using (var handler = new ProcessHandler("chrome&flash"))
+            //Automatically get the shockwave task from Chrome, this way:
+            using (var handler = new ProcessHandler("notepad++"))
             {
                 SetTitle(handler.ToString());
 
                 _scanner.SetAccess(handler);
                 _scanner.SetSettings(_settings);
 
-                _scanner.SearchFor("flashplayer");
+                _scanner.SearchFor<Signature>("?? ?? FF 00 00");
             }
         }
 
-        private void Scan_Ends(object sender, ScanEndsEventArgs args)
+        private void Search_Result(object sender, SearchResultEventArgs args)
         {
             Console.WriteLine(args.ToString());
 

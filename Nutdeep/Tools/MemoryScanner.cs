@@ -23,7 +23,7 @@ namespace Nutdeep.Tools
         private MemoryDumper _dumper;
         private Collection<MemoryInformation> _memoryRegions;
 
-        public event ScanEndsEventHandler ScanEnds;
+        public event SearchResultEventHandler SearchResult;
 
         public ScanSettings Settings { get; set; } = new ScanSettings();
 
@@ -84,9 +84,9 @@ namespace Nutdeep.Tools
                         goto ADDY;
                 }
 
-                if (Settings.Writable != null)
+                if (Settings.Writable != ScanType.BOTH)
                 {
-                    if ((bool)Settings.Writable)
+                    if (Settings.Writable == ScanType.ONLY)
                     {
                         if (!memProps.Protect.IsWritable)
                             goto ADDY;
@@ -94,9 +94,9 @@ namespace Nutdeep.Tools
                     else if (memProps.Protect.IsWritable)
                         goto ADDY;
                 }
-                if (Settings.CopyOnWrite != null)
+                if (Settings.CopyOnWrite != ScanType.BOTH)
                 {
-                    if ((bool)Settings.CopyOnWrite)
+                    if (Settings.CopyOnWrite == ScanType.ONLY)
                     {
                         if (!memProps.Protect.IsCopyOnWrite)
                             goto ADDY;
@@ -104,9 +104,9 @@ namespace Nutdeep.Tools
                     else if (memProps.Protect.IsCopyOnWrite)
                         goto ADDY;
                 }
-                if (Settings.Executable != null)
+                if (Settings.Executable != ScanType.BOTH)
                 {
-                    if ((bool)Settings.Executable)
+                    if (Settings.Executable == ScanType.ONLY)
                     {
                         if (!memProps.Protect.IsExecutable)
                             goto ADDY;
@@ -123,7 +123,7 @@ namespace Nutdeep.Tools
             }
         }
 
-        //TODO: Step the scan
+        //TODO: Organize this lil bitch
         private void Scan(IntPtr baseAddress, byte[] region, byte[] pattern,
             ref Collection<IntPtr> addresses, bool caseSensitive = true)
         {
@@ -141,20 +141,8 @@ namespace Nutdeep.Tools
                 {
                     var address = new IntPtr((int)baseAddress + offSet);
 
-                    if (Settings.FastScan)
-                    {
-                        if (Settings.FastScanType == FastScanType.ALIGNMENT)
-                        {
-                            if (((uint)address % Settings.FastScan_Digit) != 0)
-                                goto CONTINUE;
-                        }
-                        else
-                        {
-                            if (((uint)address & 0xf) != Settings.FastScan_Digit)
-                                goto CONTINUE;
-                        }
-                    }
-
+                    if (!FastScanChecker(address))
+                        goto CONTINUE;
 
                     if (pattern.Length > 1)
                     {
@@ -172,7 +160,6 @@ namespace Nutdeep.Tools
                     CONTINUE:
                     offSet++;
                 }
-
             }
             else
             {
@@ -223,20 +210,9 @@ namespace Nutdeep.Tools
                 for (int i = 0; i < region.Length; i++)
                 {
                     var address = new IntPtr((int)baseAddress + i);
+                    if (!FastScanChecker(address))
+                        continue;
 
-                    if (Settings.FastScan)
-                    {
-                        if (Settings.FastScanType == FastScanType.ALIGNMENT)
-                        {
-                            if (((uint)address % Settings.FastScan_Digit) != 0)
-                                continue;
-                        }
-                        else
-                        {
-                            if (((uint)address & 0xf) != Settings.FastScan_Digit)
-                                continue;
-                        }
-                    }
                     addresses.Add(address);
                 }
             }
@@ -246,21 +222,11 @@ namespace Nutdeep.Tools
                 var pattern = aobString.ToWildCardBytes();
                 while ((offSet = Array.IndexOf(region, pattern[0], offSet)) != -1)
                 {
-                    var address = new IntPtr(((int)baseAddress + offSet) - aobString.AmountToSubtract);
+                    var address = new IntPtr(((int)baseAddress + offSet)
+                        - aobString.AmountToSubtract);
 
-                    if (Settings.FastScan)
-                    {
-                        if (Settings.FastScanType == FastScanType.ALIGNMENT)
-                        {
-                            if (((uint)address % Settings.FastScan_Digit) != 0)
-                                goto CONTINUE;
-                        }
-                        else
-                        {
-                            if (((uint)address & 0xF) != Settings.FastScan_Digit)
-                                goto CONTINUE;
-                        }
-                    }
+                    if (!FastScanChecker(address))
+                        goto CONTINUE;
 
                     if (offSet < aobString.AmountToSubtract)
                         goto CONTINUE;
@@ -295,6 +261,25 @@ namespace Nutdeep.Tools
             }
         }
 
+        private bool FastScanChecker(IntPtr address)
+        {
+            if (Settings.FastScan)
+            {
+                if (Settings.FastScanType == FastScanType.ALIGNMENT)
+                {
+                    if (((uint)address % Settings.FastScan_Digit) != 0)
+                        return false;
+                }
+                else
+                {
+                    if (((uint)address & 0xF) != Settings.FastScan_Digit)
+                        return false;
+                }
+            }
+
+            return true;
+        }
+
         private IEnumerable<IntPtr> General(Signature aobString)
         {
             string pattern = aobString;
@@ -308,7 +293,7 @@ namespace Nutdeep.Tools
                 _access.Process.Pause();
 
             Stopwatch benchmark = null;
-            if (ScanEnds != null)
+            if (SearchResult != null)
                 benchmark = Stopwatch.StartNew();
 
             GetRegions();
@@ -331,11 +316,11 @@ namespace Nutdeep.Tools
                 WildCardScan(current.BaseAddress, region, aobString, ref addresses);
             }
 
-            if (ScanEnds != null)
+            if (SearchResult != null)
             {
                 benchmark.Stop();
-                ScanEnds.Invoke(this,
-                    new ScanEndsEventArgs(addresses.ToArray(),
+                SearchResult.Invoke(this,
+                    new SearchResultEventArgs(addresses.ToArray(),
                     benchmark.Elapsed.TotalMilliseconds, _access));
             }
 
@@ -344,6 +329,51 @@ namespace Nutdeep.Tools
 
             return addresses;
         }
+        private IEnumerable<IntPtr> General(ObjectSearch obj, bool caseSensitive = true)
+        {
+            ProcessHandler.CheckAccess();
+
+            if (Settings.PauseWhileScanning)
+                _access.Process.Pause();
+
+            Stopwatch benchmark = null;
+            if (SearchResult != null)
+                benchmark = Stopwatch.StartNew();
+
+            GetRegions();
+
+            var addresses = new Collection<IntPtr>();
+            var memoryRegions = _memoryRegions.ToArray();
+
+            for (int i = 0; i < memoryRegions.Length; i++)
+            {
+                byte[] region = null;
+                var current = _memoryRegions[i];
+
+                try
+                {
+                    region = _dumper.Read<byte[]>(current.BaseAddress,
+                        (int)current.RegionSize);
+                }
+                catch (UnreadableMemoryException) { continue; }
+
+                Scan(current.BaseAddress, region, obj, ref addresses, caseSensitive);
+            }
+
+            if (SearchResult != null)
+            {
+                benchmark.Stop();
+                SearchResult.Invoke(this,
+                    new SearchResultEventArgs(addresses.ToArray(),
+                    benchmark.Elapsed.TotalMilliseconds, _access));
+            }
+
+            if (Settings.PauseWhileScanning)
+                _access.Process.Resume();
+
+            return addresses;
+        }
+
         private IEnumerable<IntPtr> General(IntPtr[] addresses, byte[] buff, bool caseSensitive = true)
         {
             Collection<IntPtr> nextAddresses
@@ -355,7 +385,7 @@ namespace Nutdeep.Tools
                 _access.Process.Pause();
 
             Stopwatch benchmark = null;
-            if (ScanEnds != null)
+            if (SearchResult != null)
                 benchmark = Stopwatch.StartNew();
 
             if (!caseSensitive)
@@ -395,11 +425,11 @@ namespace Nutdeep.Tools
             }
 
 
-            if (ScanEnds != null)
+            if (SearchResult != null)
             {
                 benchmark.Stop();
-                ScanEnds.Invoke(this,
-                    new ScanEndsEventArgs(nextAddresses.ToArray(),
+                SearchResult.Invoke(this,
+                    new SearchResultEventArgs(nextAddresses.ToArray(),
                     benchmark.Elapsed.TotalMilliseconds, _access));
             }
 
@@ -408,49 +438,85 @@ namespace Nutdeep.Tools
 
             return nextAddresses;
         }
-        private IEnumerable<IntPtr> General(ObjectSearch obj, bool caseSensitive = true)
+        private IEnumerable<IntPtr> General(IntPtr[] addresses, Signature signature, bool caseSensitive = true)
         {
+            Collection<IntPtr> nextAddresses
+                = new Collection<IntPtr>();
+
             ProcessHandler.CheckAccess();
 
             if (Settings.PauseWhileScanning)
                 _access.Process.Pause();
 
             Stopwatch benchmark = null;
-            if (ScanEnds != null)
+            if (SearchResult != null)
                 benchmark = Stopwatch.StartNew();
 
-            GetRegions();
-
-            var addresses = new Collection<IntPtr>();
-            var memoryRegions = _memoryRegions.ToArray();
-
-            for (int i = 0; i < memoryRegions.Length; i++)
+            if (!signature.IsWildCard)
             {
-                byte[] region = null;
-                var current = _memoryRegions[i];
-
-                try
+                var bytes = signature.ToBytes();
+                for (int i = 0; i < addresses.Length; i++)
                 {
-                    region = _dumper.Read<byte[]>(current.BaseAddress,
-                        (int)current.RegionSize);
-                }
-                catch (UnreadableMemoryException) { continue; }
+                    var current =
+                        _dumper.Read<byte[]>(addresses[i], bytes.Length);
 
-                Scan(current.BaseAddress, region, obj, ref addresses, caseSensitive);
+                    if (bytes[0] != current[0]) continue;
+
+                    for (int x = 0; x < bytes.Length; x++)
+                    {
+                        if (bytes[x] == current[x])
+                        {
+                            if (x == bytes.Length - 1)
+                                nextAddresses.Add(addresses[i]);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var bytes = signature.ToWildCardBytes();
+
+                if (signature.IsUniqueWildCard)
+                    return addresses;
+
+                for (int i = 0; i < addresses.Length; i++)
+                {
+                    var current =
+                       _dumper.Read<byte[]>(addresses[i], bytes.Length);
+
+                    for (int x = 0; x < bytes.Length; x++)
+                    {
+                        if (bytes[x] == null)
+                        {
+                            if (x == bytes.Length - 1)
+                            {
+                                nextAddresses.Add(addresses[i]);
+                                break;
+                            }
+                            continue;
+                        }
+
+                        if (bytes[x] == current[x])
+                        {
+                            if (x == bytes.Length - 1)
+                                nextAddresses.Add(addresses[i]);
+                        }
+                    }
+                }
             }
 
-            if (ScanEnds != null)
+            if (SearchResult != null)
             {
                 benchmark.Stop();
-                ScanEnds.Invoke(this,
-                    new ScanEndsEventArgs(addresses.ToArray(),
+                SearchResult.Invoke(this,
+                    new SearchResultEventArgs(nextAddresses.ToArray(),
                     benchmark.Elapsed.TotalMilliseconds, _access));
             }
 
             if (Settings.PauseWhileScanning)
                 _access.Process.Resume();
 
-            return addresses;
+            return nextAddresses;
         }
 
         public IntPtr[] SearchFor<T>(T obj)
@@ -459,6 +525,9 @@ namespace Nutdeep.Tools
 
             if (type == typeof(Signature))
                 return General((Signature)(object)obj)
+                    .ToArray();
+            else if (type == typeof(byte[]))
+                return General((byte[])(object)obj)
                     .ToArray();
 
             try
@@ -476,59 +545,19 @@ namespace Nutdeep.Tools
         public IntPtr[] NextSearchFor<T>(IntPtr[] addresses, T obj)
         {
             var type = typeof(T);
-            switch (Type.GetTypeCode(type))
+
+            if (type == typeof(Signature))
+                return General(addresses, (Signature)(object)obj)
+                    .ToArray();
+            else if (type == typeof(byte[]))
+                return General((byte[])(object)obj)
+                    .ToArray();
+
+            try
             {
-                case TypeCode.Boolean:
-                    return General(addresses, BitConverter.GetBytes(
-                         (bool)(object)obj)).ToArray();
-                case TypeCode.Char:
-                    return General(addresses, BitConverter.GetBytes(
-                        (char)(object)obj)).ToArray();
-                case TypeCode.SByte:
-                    return General(addresses, BitConverter.GetBytes(
-                        (sbyte)(object)obj)).ToArray();
-                case TypeCode.Byte:
-                    return General(addresses, BitConverter.GetBytes(
-                        (byte)(object)obj)).ToArray();
-                case TypeCode.Int16:
-                    return General(addresses, BitConverter.GetBytes(
-                        (short)(object)obj)).ToArray();
-                case TypeCode.UInt16:
-                    return General(addresses, BitConverter.GetBytes(
-                        (ushort)(object)obj)).ToArray();
-                case TypeCode.Int32:
-                    return General(addresses, BitConverter.GetBytes(
-                        (int)(object)obj)).ToArray();
-                case TypeCode.UInt32:
-                    return General(addresses, BitConverter.GetBytes(
-                        (uint)(object)obj)).ToArray();
-                case TypeCode.Int64:
-                    return General(addresses, BitConverter.GetBytes(
-                        (long)(object)obj)).ToArray();
-                case TypeCode.UInt64:
-                    return General(addresses, BitConverter.GetBytes(
-                        (ulong)(object)obj)).ToArray();
-                case TypeCode.Single:
-                    return General(addresses, BitConverter.GetBytes(
-                        (float)(object)obj)).ToArray();
-                case TypeCode.Double:
-                    return General(addresses, BitConverter.GetBytes(
-                        (double)(object)obj)).ToArray();
-                case TypeCode.Decimal:
-                    var bytes = decimal.GetBits(
-                        (decimal)(object)obj).SelectMany(
-                        x => BitConverter.GetBytes(x)).ToArray();
-                    return General(addresses, bytes).ToArray();
-                case TypeCode.String:
-                    return General(addresses, Encoding.ASCII.GetBytes(
-                        (string)(object)obj)).ToArray();
-                default:
-                    if (type == typeof(byte[]))
-                        return General(addresses, (byte[])(object)obj).ToArray();
-                    else if (type == typeof(Signature))
-                        return General((Signature)(object)obj).ToArray();
-                    else throw new TypeNotSupportedException(type);
+                return General(addresses, Parse(obj)).ToArray();
             }
+            catch { throw new TypeNotSupportedException(type); }
         }
         public IntPtr[] NextSearchFor(IntPtr[] addresses, string str, bool caseSensitive = true)
         {

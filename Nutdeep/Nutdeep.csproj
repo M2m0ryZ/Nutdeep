@@ -59,7 +59,7 @@
     <Compile Include="Utils\CustomTypes\ObjectSearch.cs" />
     <Compile Include="Utils\CustomTypes\Signature.cs" />
     <Compile Include="Utils\Delegates.cs" />
-    <Compile Include="Utils\EventArguments\ScanEndsEventArgs.cs" />
+    <Compile Include="Utils\EventArguments\SearchResultEventArgs.cs" />
     <Compile Include="Utils\Extensions\ByteArrayExtension.cs" />
     <Compile Include="Utils\Extensions\ByteExtension.cs" />
     <Compile Include="Utils\Extensions\DecimalExtension.cs" />

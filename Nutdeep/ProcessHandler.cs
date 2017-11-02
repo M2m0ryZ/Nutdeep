@@ -42,7 +42,8 @@ namespace Nutdeep
 
         public ProcessHandler(Process process)
         {
-            Process = process;
+            Process = process ?? 
+                throw new ProcessNotFoundException();
             SetupProcessAccess(Process.Id);
         }
 
@@ -53,7 +54,7 @@ namespace Nutdeep
                 .Where(task => task.RunsShockwaveFlash())
                 .FirstOrDefault() : GetProcessByName(processName, index);
 
-            if(Process == null) throw new ProcessNotFoundException();
+            if (Process == null) throw new ProcessNotFoundException();
 
             SetupProcessAccess(Process.Id);
         }
