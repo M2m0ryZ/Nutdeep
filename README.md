@@ -46,7 +46,7 @@ var flashPlayerProcesses = Process.GetProcesses()
 using (var handler = new ProcessHandler(//))
 {
   //MemoryScanner needs for ProcessAccess (ProcessHandler : ProcessAccess)
-  MemoryScanner scanner = handler;
+  MemoryScanner scanner = new MemoryScanner(handler);
   scanner.SetSettings(new ScanSettings()
   {
     Writable = ScanType.ONLY
@@ -82,7 +82,7 @@ var nextAddresses = scanner.NextSearchFor<Signature>(addresses, "0I ?? LO ?? VE 
 using (var handler = new ProcessHandler(//))
 {
   //MemoryDumper needs for ProcessAccess (ProcessHandler : ProcessAccess)
-  MemoryDumper dumper = handler;
+  MemoryDumper dumper = new MemoryDumper(handler);
   
   /.../
 }
@@ -107,7 +107,7 @@ var str = dumper.Read<string>(IntPtr address, 16);
 using (var handler = new ProcessHandler(//))
 {
   //MemoryDumper needs for ProcessAccess (ProcessHandler : ProcessAccess)
-  MemoryEditor editor = handler;
+  MemoryEditor editor = new MemoryEditor(editor);
   
   /.../
 }
