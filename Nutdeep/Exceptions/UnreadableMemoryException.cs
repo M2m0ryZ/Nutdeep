@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Nutdeep.Tools;
+
 namespace Nutdeep.Exceptions
 {
     public class UnreadableMemoryException : Exception

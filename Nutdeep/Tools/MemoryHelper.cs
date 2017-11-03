@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
+﻿﻿using System;
 using System.Text;
+using System.Collections.Generic;
+
 using Nutdeep.Utils.Extensions;
 
 namespace Nutdeep.Tools
 {
     public abstract class MemoryHelper
     {
-        private Dictionary<Type,object> ParserDictionary = new Dictionary<Type, object>()
+        private Dictionary<Type,object> ParserDictionary 
+            = new Dictionary<Type, object>()
         {
             {typeof(short),new ShortParser()},
             {typeof(int),new IntParser()},
@@ -24,7 +26,6 @@ namespace Nutdeep.Tools
             {typeof(decimal), new DecimalParser()},
             {typeof(string), new StringParser()}
         };
-
 
         protected T Parse<T>(byte[] array)
             => ((ParsingHelper<T>) ParserDictionary[typeof(T)]).Parse(array);
@@ -165,11 +166,5 @@ namespace Nutdeep.Tools
             public override byte[] Parse(string obj)
                 => Encoding.ASCII.GetBytes(obj);
         }
-        
-        
-        
-        
-        
-        
     }
 }

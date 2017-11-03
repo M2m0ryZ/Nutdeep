@@ -6,162 +6,87 @@ using Nutdeep;
 using Nutdeep.Tools;
 using Nutdeep.Utils;
 using Nutdeep.Utils.Extensions;
-using Nutdeep.Utils.EventArguments;
-using System.ComponentModel;
 using Nutdeep.Utils.CustomTypes;
+using Nutdeep.Utils.EventArguments;
 
 namespace ConsoleExample
 {
     class Program : ConsoleHandler
     {
-        MemoryScanner _scanner;
-        IList<Process> _processesPaused;
-        Program()
+        private ScanSettings _settings;
+        private MemoryScanner _scanner;
+        private IList<Process> _processesPaused;
+        private Program()
         {
-            OnClose(On_Close);
+            OnClose(Console_OnClose);
 
+            //Take care, PauseWhileScanning is unstable yet
+            _settings = new ScanSettings()
+            {
+                Writable = ScanType.ONLY,
+                Executable = ScanType.BOTH,
+                CopyOnWrite = ScanType.BOTH,
+            }; //This is our default setup
+
+            _scanner = new MemoryScanner();
             _processesPaused = new List<Process>();
 
-            _scanner = new MemoryScanner()
-            {
-                //You have here all the settings as CheatEngine 
-                //please feel free to use any of them
-                Settings = new ScanSettings()
-                {
-                    Writable = true //I'm just showing it, it's like this be default
-                }
-            };
-
-            //This is most for when you are going to scan throw many process
-            _scanner.ScanEnds += Scan_Ends;
+            _scanner.SearchResult += Search_Result;
         }
 
         static void Main(string[] args) => new Program().Run();
 
-        void Run()
+        private void Run()
         {
-            ScanAllProcess();
-            //ScanNotepad();
+            OpenChromeHandle();
 
             Console.ReadLine();
         }
 
-        void ScanNotepad()
+        private void OpenChromeHandle()
         {
-            using (var access = new ProcessAccess("notepad"))
+            //Automatically get the shockwave task from Chrome, this way:
+            using (var handler = new ProcessHandler("chrome&flash"))
             {
-                SetTitle(access.ToString());
+                SetTitle(handler.ToString());
 
-                MemoryScanner scanner = access;
-                //scanner.SetSettings(ScanSettings); you got this if you want any special shit
-                //as i dont care about events for this, i made this local instance
+                _scanner.SetAccess(handler);
+                _scanner.SetSettings(_settings);
 
-                //if you scan from here, and you enabled 
-                //"PauseWhileScanning" please dont forgot to do this
-                if (scanner.Settings.PauseWhileScanning)
-                    _processesPaused.Add(access.Process);
-
-                SEARCH:
-                Console.Write("Gimme a string to search throw notepad: ");
-
-                var str = Console.ReadLine();
-                var addresses = scanner.GetAddresses(str);
-
-                Console.Beep();
-
-                if (addresses.Length == 0)
-                {
-                    Console.WriteLine("Found nothing (Pedo*)");
-                    goto SEARCH;
-                }
-
-                GIMME:
-                Console.Write($"Got {addresses.Length} results, gimme an address index to edit its memory: ");
-
-                if (!int.TryParse(Console.ReadLine(), out int index)) goto GIMME;
-
-                Console.Write($"Gimme a value to write it on {addresses[index].ToString("x8").ToUpper()}: ");
-
-                var value = Console.ReadLine();
-
-                MemoryEditor editor = access;
-                editor.Write(addresses[index], value);
-
-                //This is "Next Scan"
-                var changed = scanner.NextAddresses(addresses, value);
-
-                Console.WriteLine($"{changed.Length} from the last scan has the new value: {value}");
-                Console.Write("Press enter to show them/it...");
-                Console.ReadLine();
-
-                PrintMemoryView(changed, access);
-
-                //as all the scans were done without problems (like unexpected exit)
-                if (scanner.Settings.PauseWhileScanning)
-                    _processesPaused.Remove(access.Process);
+                _scanner.SearchFor<Signature>("00");
             }
         }
 
-        void ScanAllProcess()
+        //TODO: Optimizar "PauseWhileScan"
+        private void Search_Result(object sender, SearchResultEventArgs args)
         {
-            foreach (var process in Process.GetProcesses())
+            Console.WriteLine(args.ToString());
+
+            MemoryDumper dumper = args.Access;
+
+            for (int i = 0; i < args.Addresses.Length; i++)
             {
-                try
-                {
-                    using (var access = new ProcessAccess(process.Id))
-                    {
-                        _scanner.SetAccess(access);
+                var address = args.Addresses[i];
 
-                        SetTitle(access.ToString());
+                Console.Write($"[({i}) - {address.ToString("x8").ToUpper()}]: ");
 
-                        if (_scanner.Settings.PauseWhileScanning)
-                            _processesPaused.Add(access.Process);
-
-                        _scanner.GetAddresses("comm");
-
-                        if (_scanner.Settings.PauseWhileScanning)
-                            _processesPaused.Remove(access.Process);
-                    }
-                } catch { }
-            }
-        }
-
-        void SetTitle(string inf)
-        {
-            Console.Title = $"Nutdeep - {inf}";
-        }
-
-        void PrintMemoryView(IntPtr[] addresses, MemoryDumper dumper)
-        {
-            for (int i = 0; i < addresses.Length; i++)
-            {
-                var address = addresses[i];
-                Console.Write($"([{i}] - {address.ToString("x8").ToUpper()}) => ");
-
-                foreach (var b in dumper.GetByteArray(address))
+                foreach (var b in dumper.Read<byte[]>(address, 32))
                     Console.Write($"{b.ToString("x2").ToUpper()} ");
 
-                Console.WriteLine($": {dumper.Read<string>(address, 32)}");
+                Console.WriteLine($": {dumper.Read<string>(address, 42)}");
             }
         }
 
-        private void On_Close()
+        private void Console_OnClose()
         {
             if (_processesPaused.Count > 0)
                 foreach (var process in _processesPaused)
                     process.Resume();
         }
 
-        private void Scan_Ends(object sender, ScanEndsEventArgs args)
+        private void SetTitle(string inf)
         {
-            Console.WriteLine(args.ToString());
-            Console.Beep();
-            Console.WriteLine("Press enter to show the results...");
-            Console.ReadLine();
-
-            PrintMemoryView(args.Addresses, args.Access);
-
-            Console.WriteLine();
+            Console.Title = $"Nutdeep - {inf}";
         }
     }
 }

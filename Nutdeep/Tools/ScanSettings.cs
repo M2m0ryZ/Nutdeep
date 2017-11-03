@@ -1,26 +1,25 @@
-﻿namespace Nutdeep.Tools
+﻿﻿namespace Nutdeep.Tools
 {
     public class ScanSettings
     {
         /// <summary>
-        /// True: Only scan writable memory
-        /// False: Do not scan writable memory
-        /// Null: Do not care if it's writable memory or not
+        /// ONLY: Only scan writable memory
+        /// NOT: Do not scan writable memory
+        /// BOTH: Do not care if it's writable memory or not
         /// </summary>
-        public bool? Writable { get; set; } = true; //dude shit a nullable boolean?!
+        public ScanType Writable { get; set; } = ScanType.ONLY;
         /// <summary>
-        /// True: Only scan executable memory
-        /// False: Do not scan executable memory
-        /// Null: Do not care if it's executable memory or not
+        /// ONLY: Only scan executable memory
+        /// NOT: Do not scan executable memory
+        /// BOTH: Do not care if it's executable memory or not
         /// </summary>
-        public bool? Executable { get; set; } = null; //you aren't sure wether something is true or false?
+        public ScanType Executable { get; set; } = ScanType.BOTH;
         /// <summary>
-        /// True: Only scan copy-on-write memory
-        /// False: Do not scan copy-on-write memory
-        /// Null: Do not care if it's copy-on-write memory or not
+        /// ONLY: Only scan copy-on-write memory
+        /// NOT: Do not scan copy-on-write memory
+        /// BOTH: Do not care if it's copy-on-write memory or not
         /// </summary>
-        public bool? CopyOnWrite { get; set; } = null; //you aren't sure hue
-
+        public ScanType CopyOnWrite { get; set; } = ScanType.BOTH;
         /// <summary>
         /// Memory Region Type
         /// If it's true, it will scan memory that's mapped into the view of an image section
@@ -55,5 +54,12 @@
     {
         ALIGNMENT,
         LAST_DIGIT
+    }
+
+    public enum ScanType
+    {
+        ONLY,
+        NOT,
+        BOTH
     }
 }

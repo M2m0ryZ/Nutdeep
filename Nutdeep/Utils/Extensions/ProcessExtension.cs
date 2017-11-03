@@ -3,12 +3,13 @@ using System.Diagnostics;
 
 using Nutdeep.Tools;
 using Nutdeep.Tools.Flags;
+using System.Linq;
 
 namespace Nutdeep.Utils.Extensions
 {
     public static class ProcessExtension
     {
-        
+
 
         public static void Pause(this Process process)
         {
@@ -33,6 +34,15 @@ namespace Nutdeep.Utils.Extensions
                 Pinvoke.ResumeThread(handle);
                 Pinvoke.CloseHandle(handle);
             }
+        }
+
+        public static bool RunsShockwaveFlash(this Process process)
+        {
+            foreach (var module in process.Modules.Cast<ProcessModule>())
+                if (module.ModuleName == "pepflashplayer.dll")
+                    return true;
+
+            return false;
         }
     }
 }

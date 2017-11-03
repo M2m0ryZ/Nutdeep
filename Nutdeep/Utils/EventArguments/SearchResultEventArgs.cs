@@ -1,15 +1,17 @@
 ﻿using System;
 using System.Globalization;
 
+using Nutdeep.Tools;
+
 namespace Nutdeep.Utils.EventArguments
 {
-    public class ScanEndsEventArgs : EventArgs
+    public class SearchResultEventArgs : EventArgs
     {
         public IntPtr[] Addresses { get; }
         public double Milliseconds { get; }
         public ProcessAccess Access { get; }
 
-        internal ScanEndsEventArgs(IntPtr[] addresses, double milliseconds, ProcessAccess access)
+        internal SearchResultEventArgs(IntPtr[] addresses, double milliseconds, ProcessAccess access)
         {
             Access = access;
             Addresses = addresses;
