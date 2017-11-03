@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Nutdeep</id>
+    <version>1.0.3</version>
+    <authors>Jeremi Martini, Mark</authors>
+    <owners>Jeremi Martini</owners>
+    <licenseUrl>https://www.gnu.org/licenses/gpl.txt</licenseUrl>
+    <projectUrl>https://adversities.github.io/Nutdeep/</projectUrl>
+    <iconUrl>https://i.imgsafe.org/c7/c7a04b4520.png</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>A light memory manager library made by C# lovers</description>
+    <releaseNotes>Little changes on how we setup the environment</releaseNotes>
+    <copyright>Copyright Jeremi Martini 2017</copyright>
+    <tags>Memory KERNERL32</tags>
+    <dependencies>
+      <dependency id="SampleDependency" version="1.0" />
+    </dependencies>
+  </metadata>
+</package>

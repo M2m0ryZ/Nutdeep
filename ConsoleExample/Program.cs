@@ -8,6 +8,7 @@ using Nutdeep.Utils;
 using Nutdeep.Utils.Extensions;
 using Nutdeep.Utils.CustomTypes;
 using Nutdeep.Utils.EventArguments;
+using Nutdeep.Exceptions;
 
 namespace ConsoleExample
 {
@@ -21,7 +22,7 @@ namespace ConsoleExample
             OnClose(Console_OnClose);
 
             //Take care, PauseWhileScanning is unstable yet
-            _settings = new ScanSettings(writable: ScanType.ONLY); 
+            _settings = new ScanSettings(writable: ScanType.ONLY);
             //This is our default setup
 
             _scanner = new MemoryScanner();
@@ -42,14 +43,23 @@ namespace ConsoleExample
         private void OpenChromeHandle()
         {
             //Automatically get the shockwave task from Chrome, this way:
-            using (var handler = new ProcessHandler("chrome&flash"))
+            try
             {
-                SetTitle(handler.ToString());
+                using (var handler = new ProcessHandler("chrome?flash"))
+                {
+                    SetTitle(handler.ToString());
 
-                _scanner.SetProcess(handler);
-                _scanner.SetSettings(_settings);
+                    _scanner.SetProcess(handler);
+                    _scanner.SetSettings(_settings);
 
-                _scanner.SearchFor<Signature>("00");
+                    _scanner.SearchFor<Signature>("00");
+                }
+            }
+            catch (ProcessNotFoundException e)
+            {
+                // oh yeah, if you guys care about handle this, well, this is it... 
+                Console.WriteLine(e.Message);
+                return;
             }
         }
 
