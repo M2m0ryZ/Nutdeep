@@ -1,4 +1,6 @@
-# Nutdeep v1.0.3  ![NutdeepIcon](https://i.imgsafe.org/c7/c7ae82b7c1.png) 
+# Nutdeep v1.0.3  ![NutdeepIcon](https://i.imgsafe.org/c7/c7ae82b7c1.png)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 Nutdeep - A light memory manager library made by C# lovers - [.NET Framework 4.7.1](https://www.microsoft.com/en-us/download/details.aspx?id=56119)
 
 Click [here](https://github.com/Adversities/Nutdeep/blob/master/ConsoleExample/Program.cs) to check our Console APP example
