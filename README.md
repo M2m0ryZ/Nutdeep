@@ -4,6 +4,13 @@ Nutdeep - A light memory manager library made by C# lovers
 Click [here](https://github.com/Adversities/Nutdeep/blob/master/ConsoleExample/Program.cs) to check our Console APP example
 
 
+### Nuget 
+- Package Manager
+  - Install-Package Nutdeep -Version 1.0.2
+- .NET CLI
+  - dotnet add package Nutdeep --version 1.0.2
+
+
 
 ### ProcessHandler
 
