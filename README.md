@@ -2,6 +2,7 @@
 Nutdeep - A light memory manager library made by C# lovers
 
 
+
 ### ProcessHandler
 
 By string
@@ -41,22 +42,11 @@ using (var handler = new ProcessHandler(//))
   {
     Writable = ScanType.ONLY
   });
+  
+  /.../
 }
 ```
 Click [here](https://github.com/Adversities/Nutdeep/blob/master/Nutdeep/Tools/ScanSettings.cs) to check how ScanSettings is setup by default *(that will be the setup if you dont specific it)*
-
-Where T might be:
-
-* Char
-* Single 
-* Byte[]
-* String
-* Boolean
-* Decimal
-* Int16/UInt16
-* Int32/UInt32
-* Int64/UInt64
-* Signature : String
 
 To perfom a scan
 ```csharp
@@ -77,8 +67,58 @@ Next scan by signature
 var nextAddresses = scanner.NextSearchFor<Signature>(addresses, "0I ?? LO ?? VE ?? CO ?? ?? DE");
 ```
 
-# THIS IS INCOMPLETE, GONNA DONE THIS AFTER THE TRAVEL
+
+### MemoryDumper
+```csharp
+using (var handler = new ProcessHandler(//))
+{
+  //MemoryDumper needs for ProcessAccess (ProcessHandler : ProcessAccess)
+  MemoryDumper dumper = handler;
+  
+  /.../
+}
+```
+
+Read memory this way
+```csharp
+var object = dumper.Read<T>(IntPtr address);
+```
+
+When **T** is **String** or **Byte[]** you can also define a length as the following
+```csharp
+var byteArray = dumper.Read<byte[]>(IntPtr address, 16);
+```
+```csharp
+var str = dumper.Read<string>(IntPtr address, 16);
+```
 
 
-TODO List:
-* Multithreading scan
+### MemoryEditor
+```csharp
+using (var handler = new ProcessHandler(//))
+{
+  //MemoryDumper needs for ProcessAccess (ProcessHandler : ProcessAccess)
+  MemoryEditor editor = handler;
+  
+  /.../
+}
+```
+
+Edit memory this way
+```csharp
+editor.Write(IntPtr address, T obj);
+```
+
+
+Where **T** might be:
+
+* Char
+* Single 
+* Byte[]
+* String
+* Boolean
+* Decimal
+* Int16/UInt16
+* Int32/UInt32
+* Int64/UInt64
+* Signature : String
