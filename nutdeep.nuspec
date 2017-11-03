@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Nutdeep</id>
+    <version>1.0.2</version>
+    <authors>Adversities</authors>
+    <owners>Adversities</owners>
+    <licenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</licenseUrl>
+    <projectUrl>http://PROJECT_URL_HERE_OR_DELETE_THIS_LINE</projectUrl>
+    <iconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A light memory manager library made by C# lovers</description>
+    <releaseNotes>Added wildcards, some encoding changes, added missing exceptions, added the capability to get automatically the Shockwave process from Google Chrome</releaseNotes>
+    <copyright>Copyright Adversities 2017</copyright>
+    <tags>Memory KERNERL32</tags>
+    <dependencies>
+      <dependency id="SampleDependency" version="1.0" />
+    </dependencies>
+  </metadata>
+</package>

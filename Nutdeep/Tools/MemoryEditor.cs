@@ -10,12 +10,12 @@ namespace Nutdeep.Tools
 
         public MemoryEditor() { }
 
-        internal MemoryEditor(ProcessAccess access)
+        public MemoryEditor(ProcessAccess access)
         {
-            SetAccess(access);
+            SetProcess(access);
         }
 
-        public void SetAccess(ProcessAccess access)
+        public void SetProcess(ProcessAccess access)
         {
             _access = access;
         }

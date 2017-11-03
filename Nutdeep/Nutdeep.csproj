@@ -42,6 +42,7 @@
     <Compile Include="Exceptions\UnwritableMemoryException.cs" />
     <Compile Include="ProcessHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tools\FastScanSettings.cs" />
     <Compile Include="Tools\Flags\ControlType.cs" />
     <Compile Include="Tools\Flags\MemoryProtection.cs" />
     <Compile Include="Tools\Flags\MemoryState.cs" />

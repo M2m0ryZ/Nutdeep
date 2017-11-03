@@ -21,12 +21,8 @@ namespace ConsoleExample
             OnClose(Console_OnClose);
 
             //Take care, PauseWhileScanning is unstable yet
-            _settings = new ScanSettings()
-            {
-                Writable = ScanType.ONLY,
-                Executable = ScanType.BOTH,
-                CopyOnWrite = ScanType.BOTH,
-            }; //This is our default setup
+            _settings = new ScanSettings(writable: ScanType.ONLY); 
+            //This is our default setup
 
             _scanner = new MemoryScanner();
             _processesPaused = new List<Process>();
@@ -50,7 +46,7 @@ namespace ConsoleExample
             {
                 SetTitle(handler.ToString());
 
-                _scanner.SetAccess(handler);
+                _scanner.SetProcess(handler);
                 _scanner.SetSettings(_settings);
 
                 _scanner.SearchFor<Signature>("00");
@@ -62,7 +58,7 @@ namespace ConsoleExample
         {
             Console.WriteLine(args.ToString());
 
-            MemoryDumper dumper = args.Access;
+            MemoryDumper dumper = new MemoryDumper(args.Access);
 
             for (int i = 0; i < args.Addresses.Length; i++)
             {

@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Text;
 
 using Nutdeep.Exceptions;
-using Nutdeep.Utils.Extensions;
-using System.Diagnostics;
 
 namespace Nutdeep.Tools
 {
@@ -13,12 +10,12 @@ namespace Nutdeep.Tools
 
         public MemoryDumper() { }
 
-        internal MemoryDumper(ProcessAccess access)
+        public MemoryDumper(ProcessAccess access)
         {
-            SetAccess(access);
+            SetProcess(access);
         }
 
-        public void SetAccess(ProcessAccess access)
+        public void SetProcess(ProcessAccess access)
         {
             _access = access;
         }

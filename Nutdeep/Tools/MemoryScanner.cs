@@ -18,8 +18,11 @@ namespace Nutdeep.Tools
     //TODO: multi-thread scan
     public class MemoryScanner : MemoryHelper
     {
-        public ScanSettings Settings { get; set; } 
+        public ScanSettings Settings { get; private set; } 
             = new ScanSettings();
+
+        private FastScanSettings FastScanSettings
+            => Settings.FastScanSettings;
 
         private MemoryDumper _dumper;
         private ProcessAccess _access;
@@ -32,13 +35,13 @@ namespace Nutdeep.Tools
 
         public MemoryScanner(ProcessAccess access)
         {
-            SetAccess(access);
+            SetProcess(access);
         }
 
-        public void SetAccess(ProcessAccess access)
+        public void SetProcess(ProcessAccess access)
         {
             _access = access;
-            _dumper = access;
+            _dumper = new MemoryDumper(access);
         }
 
         public void SetSettings(ScanSettings settings)
@@ -251,14 +254,14 @@ namespace Nutdeep.Tools
         {
             if (Settings.FastScan)
             {
-                if (Settings.FastScanType == FastScanType.ALIGNMENT)
+                if (FastScanSettings.FastScanType == FastScanType.ALIGNMENT)
                 {
-                    if (((uint)address % Settings.FastScan_Digit) != 0)
+                    if (((uint)address % FastScanSettings.Digit) != 0)
                         return false;
                 }
                 else
                 {
-                    if (((uint)address & 0xF) != Settings.FastScan_Digit)
+                    if (((uint)address & 0xF) != FastScanSettings.Digit)
                         return false;
                 }
             }
