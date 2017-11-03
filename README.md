@@ -1,10 +1,10 @@
-# Nutdeep
+# Nutdeep  ![NutdeepIcon](https://i.imgsafe.org/c7/c7ae82b7c1.png) 
 Nutdeep - A light memory manager library made by C# lovers
 
 Click [here](https://github.com/Adversities/Nutdeep/blob/master/ConsoleExample/Program.cs) to check our Console APP example
 
 
-### Nuget 
+### Nuget [URL](https://www.nuget.org/packages/Nutdeep/1.0.2)
 - Package Manager
   - Install-Package Nutdeep -Version 1.0.2
 - .NET CLI
