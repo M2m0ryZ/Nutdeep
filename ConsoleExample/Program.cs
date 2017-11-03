@@ -38,12 +38,12 @@ namespace ConsoleExample
 
         private void Run()
         {
-            OpenNotepadHandle();
+            OpenChromeHandle();
 
             Console.ReadLine();
         }
 
-        private void OpenNotepadHandle()
+        private void OpenChromeHandle()
         {
             //Automatically get the shockwave task from Chrome, this way:
             using (var handler = new ProcessHandler("chrome&flash"))
