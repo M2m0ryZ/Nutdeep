@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Linq;
-using System.Text;
-using System.Diagnostics;
 
 using Nutdeep.Exceptions;
-using Nutdeep.Tools.Flags;
-using Nutdeep.Utils.Extensions;
 
-/**
- * MemoryEditor - Written by Jeremi Martini (Aka Adversities)
- */
 namespace Nutdeep.Tools
 {
     public class MemoryEditor : MemoryHelper

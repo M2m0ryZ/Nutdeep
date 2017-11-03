@@ -20,11 +20,14 @@ namespace ConsoleExample
         {
             OnClose(Console_OnClose);
 
+            //Take care, PauseWhileScanning is unstable yet
             _settings = new ScanSettings()
             {
                 Writable = ScanType.ONLY,
-                PauseWhileScanning = true
-            };
+                Executable = ScanType.BOTH,
+                CopyOnWrite = ScanType.BOTH,
+            }; //This is our default setup
+
             _scanner = new MemoryScanner();
             _processesPaused = new List<Process>();
 
