@@ -2,6 +2,22 @@
 {
     public class ScanSettings
     {
+        
+        //LUULL a constructor what an improvment
+
+        public ScanSettings(ScanType writableMemory = ScanType.BOTH,ScanType executableMemory = ScanType.BOTH, ScanType copyOnWriteMemory = ScanType.BOTH)
+        {
+            Writable = writableMemory;
+            Executable = executableMemory;
+            CopyOnWrite = copyOnWriteMemory;
+        }
+
+        public ScanSettings()
+        {
+            
+        }
+        
+        
         /// <summary>
         /// ONLY: Only scan writable memory
         /// NOT: Do not scan writable memory
