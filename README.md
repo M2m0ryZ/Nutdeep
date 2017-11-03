@@ -9,11 +9,11 @@ By string
 ```csharp
 using (var handler = new ProcessHandler("ProcessName")) { ... }
 ```
-By process id (System.Int32)
+By process id **(System.Int32)**
 ```csharp
 using (var handler = new ProcessHandler(ProcessId)) { ... }
 ```
-By process (System.Diagnostics.Process)
+By process **(System.Diagnostics.Process)**
 ```csharp
 using (var handler = new ProcessHandler(Process)) { ... }
 ```
@@ -121,4 +121,4 @@ Where **T** might be:
 * Int16/UInt16
 * Int32/UInt32
 * Int64/UInt64
-* Signature : String
+* Signature : String **(Only for MemoryScan)**
