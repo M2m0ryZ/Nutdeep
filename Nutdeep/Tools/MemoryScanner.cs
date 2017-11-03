@@ -18,24 +18,21 @@ namespace Nutdeep.Tools
     //TODO: multi-thread scan
     public class MemoryScanner : MemoryHelper
     {
-        private ProcessAccess _access { get; set; }
+        public ScanSettings Settings { get; set; } 
+            = new ScanSettings();
 
         private MemoryDumper _dumper;
-        private Collection<MemoryInformation> _memoryRegions;
+        private ProcessAccess _access;
+        private Collection<MemoryInformation> _memoryRegions 
+            = new Collection<MemoryInformation>();
 
         public event SearchResultEventHandler SearchResult;
 
-        public ScanSettings Settings { get; set; } = new ScanSettings();
+        public MemoryScanner() { }
 
         public MemoryScanner(ProcessAccess access)
         {
             SetAccess(access);
-            _memoryRegions = new Collection<MemoryInformation>();
-        }
-
-        public MemoryScanner()
-        {
-            _memoryRegions = new Collection<MemoryInformation>();
         }
 
         public void SetAccess(ProcessAccess access)
@@ -168,20 +165,8 @@ namespace Nutdeep.Tools
                 {
                     var address = new IntPtr((int)baseAddress + offSet);
 
-                    if (Settings.FastScan)
-                    {
-                        if (Settings.FastScanType == FastScanType.ALIGNMENT)
-                        {
-                            if (((uint)address % Settings.FastScan_Digit) != 0)
-                                goto CONTINUE;
-                        }
-                        else
-                        {
-                            if (((uint)address & 0xf) != Settings.FastScan_Digit)
-                                goto CONTINUE;
-                        }
-                    }
-
+                    if (!FastScanChecker(address))
+                        goto CONTINUE;
 
                     if (pattern.Length > 1)
                     {
@@ -210,6 +195,7 @@ namespace Nutdeep.Tools
                 for (int i = 0; i < region.Length; i++)
                 {
                     var address = new IntPtr((int)baseAddress + i);
+
                     if (!FastScanChecker(address))
                         continue;
 
@@ -289,12 +275,12 @@ namespace Nutdeep.Tools
 
             ProcessHandler.CheckAccess();
 
-            if (Settings.PauseWhileScanning)
-                _access.Process.Pause();
-
             Stopwatch benchmark = null;
             if (SearchResult != null)
                 benchmark = Stopwatch.StartNew();
+
+            if (Settings.PauseWhileScanning)
+                _access.Process.Pause();
 
             GetRegions();
 
@@ -316,6 +302,9 @@ namespace Nutdeep.Tools
                 WildCardScan(current.BaseAddress, region, aobString, ref addresses);
             }
 
+            if (Settings.PauseWhileScanning)
+                _access.Process.Resume();
+
             if (SearchResult != null)
             {
                 benchmark.Stop();
@@ -324,21 +313,18 @@ namespace Nutdeep.Tools
                     benchmark.Elapsed.TotalMilliseconds, _access));
             }
 
-            if (Settings.PauseWhileScanning)
-                _access.Process.Resume();
-
             return addresses;
         }
         private IEnumerable<IntPtr> General(ObjectSearch obj, bool caseSensitive = true)
         {
             ProcessHandler.CheckAccess();
 
-            if (Settings.PauseWhileScanning)
-                _access.Process.Pause();
-
             Stopwatch benchmark = null;
             if (SearchResult != null)
                 benchmark = Stopwatch.StartNew();
+
+            if (Settings.PauseWhileScanning)
+                _access.Process.Pause();
 
             GetRegions();
 
@@ -360,6 +346,9 @@ namespace Nutdeep.Tools
                 Scan(current.BaseAddress, region, obj, ref addresses, caseSensitive);
             }
 
+            if (Settings.PauseWhileScanning)
+                _access.Process.Resume();
+
             if (SearchResult != null)
             {
                 benchmark.Stop();
@@ -367,9 +356,6 @@ namespace Nutdeep.Tools
                     new SearchResultEventArgs(addresses.ToArray(),
                     benchmark.Elapsed.TotalMilliseconds, _access));
             }
-
-            if (Settings.PauseWhileScanning)
-                _access.Process.Resume();
 
             return addresses;
         }
@@ -381,12 +367,12 @@ namespace Nutdeep.Tools
 
             ProcessHandler.CheckAccess();
 
-            if (Settings.PauseWhileScanning)
-                _access.Process.Pause();
-
             Stopwatch benchmark = null;
             if (SearchResult != null)
                 benchmark = Stopwatch.StartNew();
+
+            if (Settings.PauseWhileScanning)
+                _access.Process.Pause();
 
             if (!caseSensitive)
             {
@@ -425,6 +411,9 @@ namespace Nutdeep.Tools
             }
 
 
+            if (Settings.PauseWhileScanning)
+                _access.Process.Resume();
+
             if (SearchResult != null)
             {
                 benchmark.Stop();
@@ -432,9 +421,6 @@ namespace Nutdeep.Tools
                     new SearchResultEventArgs(nextAddresses.ToArray(),
                     benchmark.Elapsed.TotalMilliseconds, _access));
             }
-
-            if (Settings.PauseWhileScanning)
-                _access.Process.Resume();
 
             return nextAddresses;
         }

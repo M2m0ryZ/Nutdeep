@@ -22,12 +22,13 @@ namespace ConsoleExample
 
             _settings = new ScanSettings()
             {
-                Writable = ScanType.NOT,
+                Writable = ScanType.ONLY,
+                PauseWhileScanning = true
             };
             _scanner = new MemoryScanner();
             _processesPaused = new List<Process>();
 
-            //_scanner.SearchResult += Search_Result;
+            _scanner.SearchResult += Search_Result;
         }
 
         static void Main(string[] args) => new Program().Run();
@@ -42,26 +43,34 @@ namespace ConsoleExample
         private void OpenNotepadHandle()
         {
             //Automatically get the shockwave task from Chrome, this way:
-            using (var handler = new ProcessHandler("notepad++"))
+            using (var handler = new ProcessHandler("chrome&flash"))
             {
                 SetTitle(handler.ToString());
 
                 _scanner.SetAccess(handler);
                 _scanner.SetSettings(_settings);
 
-                _scanner.SearchFor<Signature>("?? ?? FF 00 00");
+                _scanner.SearchFor<Signature>("00");
             }
         }
 
+        //TODO: Optimizar "PauseWhileScan"
         private void Search_Result(object sender, SearchResultEventArgs args)
         {
             Console.WriteLine(args.ToString());
+
+            MemoryDumper dumper = args.Access;
 
             for (int i = 0; i < args.Addresses.Length; i++)
             {
                 var address = args.Addresses[i];
 
-                Console.WriteLine($"[{i}] {address.ToString("x8").ToUpper()}");
+                Console.Write($"[({i}) - {address.ToString("x8").ToUpper()}]: ");
+
+                foreach (var b in dumper.Read<byte[]>(address, 32))
+                    Console.Write($"{b.ToString("x2").ToUpper()} ");
+
+                Console.WriteLine($": {dumper.Read<string>(address, 42)}");
             }
         }
 

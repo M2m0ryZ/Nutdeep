@@ -33,7 +33,6 @@ namespace Nutdeep
             try
             {
                 Process = Process.GetProcessById(processId);
-
             }
             catch { throw new ProcessNotFoundException(); }
 

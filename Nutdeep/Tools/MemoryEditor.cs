@@ -40,16 +40,16 @@ namespace Nutdeep.Tools
             var type = typeof(T);
 
             if(type == typeof(byte[]))
-                ReplaceByteArray(address, (byte[])(object)obj);
+                WriteByteArray(address, (byte[])(object)obj);
 
             try
             {
-                ReplaceByteArray(address, Parse(obj));
+                WriteByteArray(address, Parse(obj));
             }
             catch { throw new TypeNotSupportedException(type); }
         }
 
-        private void ReplaceByteArray(IntPtr address, byte[] buff)
+        private void WriteByteArray(IntPtr address, byte[] buff)
         {
             ProcessHandler.CheckAccess();
 
