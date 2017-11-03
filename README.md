@@ -47,10 +47,7 @@ using (var handler = new ProcessHandler(//))
 {
   //MemoryScanner needs for ProcessAccess (ProcessHandler : ProcessAccess)
   MemoryScanner scanner = new MemoryScanner(handler);
-  scanner.SetSettings(new ScanSettings()
-  {
-    Writable = ScanType.ONLY
-  });
+  scanner.SetSettings(new ScanSettings(writable: ScanType.ONLY));
   
   /.../
 }
