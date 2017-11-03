@@ -2,18 +2,19 @@
 Nutdeep - A light memory manager library made by C# lovers
 
 
-# ProcessHandler
+### ProcessHandler
+
+By string
 ```csharp
 using (var handler = new ProcessHandler("ProcessName")) { ... }
-using (var handler = new ProcessHandler(ProcessId)) { ... }
-using (var handler = new ProcessHandler(Process)) { ... }
 ```
-
-You can find easily process that runs FlashPlayer this way
+By process id (System.Int32)
 ```csharp
-//using System.Linq
-var flashPlayerProcess = Process.GetProcesses()
-  .Where(p => p.RunsFlashPlayer()).ToArray();
+using (var handler = new ProcessHandler(ProcessId)) { ... }
+```
+By process (System.Diagnostics.Process)
+```csharp
+using (var handler = new ProcessHandler(Process)) { ... }
 ```
 
 If you are looking for Chrome Showckwave Flash process
@@ -21,20 +22,45 @@ If you are looking for Chrome Showckwave Flash process
 using (var handler = new ProcessHandler("chrome&flash")) { ... }
 ```
 
+You can find easily process that runs **FlashPlayer** this way
+```csharp
+//using System.Linq
+var flashPlayerProcesses = Process.GetProcesses()
+  .Where(p => p.RunsFlashPlayer()).ToArray();
+```
 
-# MemoryScanner
+
+
+### MemoryScanner
 ```csharp
 using (var handler = new ProcessHandler(//))
 {
   //MemoryScanner needs for ProcessAccess (ProcessHandler : ProcessAccess)
   MemoryScanner scanner = handler;
+  scanner.SetSettings(new ScanSettings()
+  {
+    Writable = ScanType.ONLY
+  });
 }
 ```
+Click [here](https://github.com/Adversities/Nutdeep/blob/master/Nutdeep/Tools/ScanSettings.cs) to check how ScanSettings is setup by default *(that will be the setup if you dont specific it)*
+
+Where T might be:
+
+* Char
+* Single 
+* Byte[]
+* String
+* Boolean
+* Decimal
+* Int16/UInt16
+* Int32/UInt32
+* Int64/UInt64
+* Signature : String
 
 To perfom a scan
 ```csharp
 var addresses = scanner.SearchFor<T>(T obj);
-//where T might be: Signature, bool, char, short, ushort, int, uint, long, ulong, decimal, float, byte[], string
 ```
 
 Scan by signature
