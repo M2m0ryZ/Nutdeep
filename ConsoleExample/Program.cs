@@ -45,7 +45,7 @@ namespace ConsoleExample
             //Automatically get the shockwave task from Chrome, this way:
             try
             {
-                using (var handler = new ProcessHandler("chrome?flash"))
+                using (var handler = new ProcessHandler("chrome&flash"))
                 {
                     SetTitle(handler.ToString());
 
