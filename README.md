@@ -6,7 +6,7 @@ Nutdeep - A light memory manager library made by C# lovers - [.NET Framework 4.7
 Click [here](https://github.com/Adversities/Nutdeep/blob/master/ConsoleExample/Program.cs) to check our Console APP example
 
 
-### Nuget [URL](https://www.nuget.org/packages/Nutdeep/1.0.3)
+### [NuGet](https://www.nuget.org/packages/Nutdeep/1.0.3)
 - Package Manager
   - Install-Package Nutdeep -Version 1.0.3
 - .NET CLI
