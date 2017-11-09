@@ -48,7 +48,7 @@ namespace Nutdeep
 
         public ProcessHandler(string processName, int index = 0)
         {
-            Process = processName.Contains("&flash") ?
+            Process = processName.ToLower().Contains("chrome&flash") ?
                 Process.GetProcessesByName("chrome")
                 .Where(task => task.RunsShockwaveFlash())
                 .FirstOrDefault() : GetProcessByName(processName, index);
@@ -94,7 +94,8 @@ namespace Nutdeep
 
         private Process GetProcessByName(string processName, int index)
         {
-            var processes = Process.GetProcessesByName(processName);
+            var processes = Process.GetProcesses().Where(p => p.ProcessName
+                .ToLower() == processName.ToLower()).ToArray();
 
             if (processes.Length == 0)
                 throw new ProcessNotFoundException();

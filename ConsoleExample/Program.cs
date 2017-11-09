@@ -5,10 +5,9 @@ using System.Collections.Generic;
 using Nutdeep;
 using Nutdeep.Tools;
 using Nutdeep.Utils;
-using Nutdeep.Utils.Extensions;
-using Nutdeep.Utils.CustomTypes;
-using Nutdeep.Utils.EventArguments;
 using Nutdeep.Exceptions;
+using Nutdeep.Utils.Extensions;
+using Nutdeep.Utils.EventArguments;
 
 namespace ConsoleExample
 {
@@ -52,7 +51,7 @@ namespace ConsoleExample
                     _scanner.SetProcess(handler);
                     _scanner.SetSettings(_settings);
 
-                    _scanner.SearchFor<Signature>("00");
+                    _scanner.SearchFor("YAHAHA YOU DIDNT!");
                 }
             }
             catch (ProcessNotFoundException e)
@@ -76,7 +75,7 @@ namespace ConsoleExample
 
                 Console.Write($"[({i}) - {address.ToString("x8").ToUpper()}]: ");
 
-                foreach (var b in dumper.Read<byte[]>(address, 32))
+                foreach (var b in dumper.Read<byte[]>(address))
                     Console.Write($"{b.ToString("x2").ToUpper()} ");
 
                 Console.WriteLine($": {dumper.Read<string>(address, 42)}");
